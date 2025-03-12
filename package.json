@@ -1,11 +1,10 @@
 {
-  "name": "gistpad",
+  "name": "gistpad-mcp",
   "version": "0.1.0",
-  "description": "Read and manage your GitHub Gists via MCP",
-  "private": true,
+  "description": "An MCP server for managing and sharing your personal knowledge/daily notes via GitHub Gists.",
   "type": "module",
   "bin": {
-    "gistpad": "./build/index.js"
+    "gistpad-mcp": "./build/index.js"
   },
   "files": [
     "build"
