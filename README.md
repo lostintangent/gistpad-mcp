@@ -8,11 +8,12 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
 
 ## 🏃 Getting started
 
-> The GistPad MCP server is built using Node.js and so before you perform the following steps, you need to ensure that you've got Node.js already installed.
+> ℹ️ The GistPad MCP server is built using Node.js and so before you perform the following steps, you need to ensure that you've got Node.js already installed.
 
-1. Generate a personal access token that includes only the `gist` scope by visiting https://github.com/settings/tokens/new
+1. Generate a personal access token that includes _only_ the `gist` scope: https://github.com/settings/tokens/new
 
 1. Add the equivalent of the following to your client's MCP config file (or via an "Add MCP server" GUI/TUI):
+
    ```json
    {
      "mcpServers": {
@@ -27,6 +28,16 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
    }
    ```
 
+1. Restart your MCP client _(optionally, depending on the tool)_
+
+1. :partying_face: Start having fun with gists + MCP! For example, try things like...
+
+   1. `How many gists have I updated this month?`
+   1. `Create a new gist about the JavaScript programming language`
+   1. `Archive my gist about <foo>`
+   1. `Give me a share URL for the gist about <bar>`
+   1. Much much more!
+
 ## 🛠️ Included tools
 
 ### Gist management
@@ -37,7 +48,6 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
 - `delete_gist` - Delete a gist by ID.
 - `update_gist_description` - Update a gist's description by ID.
 - `duplicate_gist` - Create a copy of an existing gist with all its files.
-- `share_gist` - Get the GistPad.dev sharing URL for a gist.
 
 ### File management
 
@@ -70,6 +80,17 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
 - `add_gist_comment` - Add a new comment to a gist.
 - `delete_gist_comment` - Delete a comment from a gist.
 
+<u>Unsupported/future enhancements:</u>
+
+- Firing a notification when gists are added/updated/deleted
+- Exposing the daily tasks and overdue status as tool context
+
 ## 📁 Included resources
 
-In addition to the above tools, the GistPad MCP server also exposes your gists as resources (using the `gist:///` URI scheme), which allows supporting clients to read them without requiring tool execution.
+In addition to the above tools, the GistPad MCP server also exposes your gists as resources (using the `gist:///` URI scheme), which allows clients to read them without requiring tool execution.
+
+<u>Unsupported/future enhancements:</u>
+
+- Firing a notification when gists are added/updated/deleted
+- Exposing archived/starred gists as resources
+- Allowing clients to subscribe to updates for specific gists

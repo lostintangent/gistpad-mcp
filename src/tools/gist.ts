@@ -5,7 +5,8 @@ export const gistHandlers: HandlerModule = {
     tools: [
         {
             name: "list_gists",
-            description: "List all of your GitHub Gists (excluding daily notes and archived gists)",
+            description:
+                "List all of your GitHub Gists (excluding daily notes and archived gists)",
             inputSchema: {
                 type: "object",
                 properties: {},
@@ -95,50 +96,29 @@ export const gistHandlers: HandlerModule = {
                 required: ["id"],
             },
         },
-        {
-            name: "share_gist",
-            description: "Get a GistPad.dev sharing URL for a gist",
-            inputSchema: {
-                type: "object",
-                properties: {
-                    id: {
-                        type: "string",
-                        description: "The ID of the Gist to share",
-                    },
-                },
-                required: ["id"],
-            },
-        },
     ],
 
     handlers: {
         list_gists: async (request, context) => {
             const gists = await context.fetchAllGists();
-            // Filter out daily notes and archived gists
             const filteredGists = gists.filter(
-                (gist) => gist.description !== "📆 Daily notes" &&
+                (gist) =>
+                    gist.description !== "📆 Daily notes" &&
                     !gist.description?.endsWith(" [Archived]")
             );
+
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                total: gists.length,
-                                count: filteredGists.length,
-                                gists: filteredGists.map((gist) => ({
-                                    id: gist.id,
-                                    description: gist.description,
-                                    files: Object.keys(gist.files),
-                                    created_at: gist.created_at,
-                                }))
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                count: filteredGists.length,
+                gists: filteredGists.map((gist) => ({
+                    id: gist.id,
+                    description: gist.description,
+                    files: Object.keys(gist.files),
+                    created_at: gist.created_at,
+                    updated_at: gist.updated_at,
+                    public: gist.public,
+                    url: `https://gistpad.dev/#/${gist.id}`,
+                    share_url: `https://gistpad.dev/#/share/${gist.id}`,
+                })),
             };
         },
 
@@ -151,38 +131,32 @@ export const gistHandlers: HandlerModule = {
             context.updateGistInCache(gist);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                id: gist.id,
-                                description: gist.description,
-                                files: Object.fromEntries(
-                                    Object.entries(gist.files).map(([name, file]) => [
-                                        name,
-                                        {
-                                            content: file.content,
-                                            language: file.language,
-                                            size: file.size,
-                                        },
-                                    ])
-                                ),
-                                created_at: gist.created_at,
-                                updated_at: gist.updated_at,
-                                public: gist.public,
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                id: gist.id,
+                description: gist.description,
+                files: Object.fromEntries(
+                    Object.entries(gist.files).map(([name, file]) => [
+                        name,
+                        {
+                            content: file.content,
+                            language: file.language,
+                            size: file.size,
+                        },
+                    ])
+                ),
+                created_at: gist.created_at,
+                updated_at: gist.updated_at,
+                public: gist.public,
+                url: `https://gistpad.dev/#/${gist.id}`,
+                share_url: `https://gistpad.dev/#/share/${gist.id}`,
             };
         },
 
         create_gist: async (request, context) => {
-            const { content, description = "", public: isPublic = false } =
-                request.params.arguments ?? {};
+            const {
+                content,
+                description = "",
+                public: isPublic = false,
+            } = request.params.arguments ?? {};
 
             if (!description || !content) {
                 throw new McpError(
@@ -197,27 +171,16 @@ export const gistHandlers: HandlerModule = {
                 files: {
                     ["README.md"]: {
                         content,
-                    }
-                }
+                    },
+                },
             });
 
             context.addGistToCache(response.data);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                id: response.data.id,
-                                url: `https://gist.github.com/${response.data.id}`,
-                                description
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                id: response.data.id,
+                url: `https://gistpad.dev/#/${response.data.id}`,
+                description,
             };
         },
 
@@ -226,19 +189,7 @@ export const gistHandlers: HandlerModule = {
             await context.axiosInstance.delete(`/gists/${gistId}`);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                success: true,
-                                message: `Successfully deleted gist`,
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                message: "Successfully deleted gist",
             };
         },
 
@@ -259,21 +210,9 @@ export const gistHandlers: HandlerModule = {
             context.updateGistInCache(response.data);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                success: true,
-                                id: response.data.id,
-                                description: response.data.description,
-                                message: "Successfully updated gist description"
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                id: response.data.id,
+                description: response.data.description,
+                message: "Successfully updated gist description",
             };
         },
 
@@ -297,50 +236,19 @@ export const gistHandlers: HandlerModule = {
                 files: Object.fromEntries(
                     Object.entries(sourceGist.files).map(([name, file]) => [
                         name,
-                        { content: file.content }
+                        { content: file.content },
                     ])
-                )
+                ),
             });
 
             context.addGistToCache(response.data);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                success: true,
-                                source_id: gistId,
-                                new_id: response.data.id,
-                                description: newDescription,
-                                files: Object.keys(response.data.files),
-                                message: "Successfully duplicated gist"
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
-            };
-        },
-
-        share_gist: async (request, context) => {
-            const gistId = String(request.params.arguments?.id);
-            return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                url: `https://gistpad.dev/#/share/${gistId}`,
-                                message: "Generated sharing URL"
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                source_id: gistId,
+                new_id: response.data.id,
+                description: newDescription,
+                files: Object.keys(response.data.files),
+                message: "Successfully duplicated gist",
             };
         },
     },

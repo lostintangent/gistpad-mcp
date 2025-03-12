@@ -94,14 +94,7 @@ export const dailyHandlers: HandlerModule = {
 
             context.addGistToCache(dailyNotesGist);
 
-            return {
-                content: [
-                    {
-                        type: "text",
-                        text: dailyNotesGist.files[filename].content,
-                    },
-                ],
-            };
+            return dailyNotesGist.files[filename].content;
         },
 
         list_daily_notes: async (request, context) => {
@@ -127,23 +120,11 @@ export const dailyHandlers: HandlerModule = {
             }
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                total: gists.length,
-                                count: Object.keys(dailyNotesGist.files).length,
-                                notes: Object.entries(dailyNotesGist.files).map(([filename]) => ({
-                                    filename,
-                                    date: filename.replace(".md", ""),
-                                }))
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                count: Object.keys(dailyNotesGist.files).length,
+                notes: Object.entries(dailyNotesGist.files).map(([filename]) => ({
+                    filename,
+                    date: filename.replace(".md", ""),
+                }))
             };
         },
 
@@ -187,14 +168,7 @@ export const dailyHandlers: HandlerModule = {
                 );
             }
 
-            return {
-                content: [
-                    {
-                        type: "text",
-                        text: file.content,
-                    },
-                ],
-            };
+            return file.content;
         },
     },
 };

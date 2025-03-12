@@ -46,24 +46,16 @@ export const starHandlers: HandlerModule = {
             const starredGists = await context.fetchStarredGists();
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                count: starredGists.length,
-                                gists: starredGists.map((gist) => ({
-                                    id: gist.id,
-                                    description: gist.description,
-                                    files: Object.keys(gist.files),
-                                    created_at: gist.created_at,
-                                })),
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                count: starredGists.length,
+                gists: starredGists.map((gist) => ({
+                    id: gist.id,
+                    description: gist.description,
+                    files: Object.keys(gist.files),
+                    created_at: gist.created_at,
+                    updated_at: gist.updated_at,
+                    url: `https://gistpad.dev/#/${gist.id}`,
+                    share_url: `https://gistpad.dev/#/share/${gist.id}`,
+                })),
             };
         },
 
@@ -82,20 +74,9 @@ export const starHandlers: HandlerModule = {
             context.addStarredGist(gist!);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                id: gist!.id,
-                                description: gist!.description,
-                                message: "Gist starred successfully",
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                id: gist!.id,
+                description: gist!.description,
+                message: "Gist starred successfully",
             };
         },
 
@@ -109,20 +90,9 @@ export const starHandlers: HandlerModule = {
             context.removeStarredGist(gistId);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                id: gist.id,
-                                description: gist.description,
-                                message: "Gist unstarred successfully",
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                id: gist.id,
+                description: gist.description,
+                message: "Gist unstarred successfully",
             };
         },
     },

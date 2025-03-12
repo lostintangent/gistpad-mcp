@@ -166,78 +166,8 @@ class GistpadServer {
     });
   }
 
-  private setupResourceHandlers() {
-    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
-      const context: GistHandlerContext = {
-        fetchAllGists: () => this.fetchAllGists(),
-        fetchStarredGists: () => this.fetchStarredGists(),
-        updateGistInCache: (gist: Gist) => {
-          if (this.gists) {
-            const index = this.gists.findIndex((g) => g.id === gist.id);
-            if (index !== -1) {
-              this.gists[index] = gist;
-            }
-          }
-        },
-        invalidateCache: () => {
-          this.gists = null;
-        },
-        axiosInstance: this.axiosInstance,
-        dailyNotesGistId: this.dailyNotesGistId,
-
-        addGistToCache: (gist) => this.addGistToCache(gist),
-        removeGistFromCache: (gistId) => this.removeGistFromCache(gistId),
-
-        addStarredGist: (gist) => this.addStarredGist(gist),
-        removeStarredGist: (gistId) => this.removeStarredGist(gistId),
-      };
-      return await resourceHandlers.listResources(context);
-    });
-
-    this.server.setRequestHandler(
-      ReadResourceRequestSchema,
-      async (request) => {
-        const context: GistHandlerContext = {
-          fetchAllGists: () => this.fetchAllGists(),
-          fetchStarredGists: () => this.fetchStarredGists(),
-          updateGistInCache: (gist: Gist) => {
-            if (this.gists) {
-              const index = this.gists.findIndex((g) => g.id === gist.id);
-              if (index !== -1) {
-                this.gists[index] = gist;
-              }
-            }
-          },
-          invalidateCache: () => {
-            this.gists = null;
-          },
-          axiosInstance: this.axiosInstance,
-          dailyNotesGistId: this.dailyNotesGistId,
-
-          addGistToCache: (gist) => this.addGistToCache(gist),
-          removeGistFromCache: (gistId) => this.removeGistFromCache(gistId),
-
-          addStarredGist: (gist) => this.addStarredGist(gist),
-          removeStarredGist: (gistId) => this.removeStarredGist(gistId),
-        };
-        return await resourceHandlers.readResource(request.params.uri, context);
-      }
-    );
-  }
-
-  private setupToolHandlers() {
-    const tools = [
-      ...basicHandlers.tools,
-      ...fileHandlers.tools,
-      ...starHandlers.tools,
-      ...archiveHandlers.tools,
-      ...dailyHandlers.tools,
-      ...commentHandlers.tools,
-    ];
-
-    this.server.setRequestHandler(ListToolsRequestSchema, () => ({ tools }));
-
-    const context: GistHandlerContext = {
+  private createGistContext(): GistHandlerContext {
+    return {
       fetchAllGists: () => this.fetchAllGists(),
       fetchStarredGists: () => this.fetchStarredGists(),
       updateGistInCache: (gist: Gist) => {
@@ -260,6 +190,36 @@ class GistpadServer {
       addStarredGist: (gist) => this.addStarredGist(gist),
       removeStarredGist: (gistId) => this.removeStarredGist(gistId),
     };
+  }
+
+  private setupResourceHandlers() {
+    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
+      const context = this.createGistContext();
+      return await resourceHandlers.listResources(context);
+    });
+
+    this.server.setRequestHandler(
+      ReadResourceRequestSchema,
+      async (request) => {
+        const context = this.createGistContext();
+        return await resourceHandlers.readResource(request.params.uri, context);
+      }
+    );
+  }
+
+  private setupToolHandlers() {
+    const tools = [
+      ...basicHandlers.tools,
+      ...fileHandlers.tools,
+      ...starHandlers.tools,
+      ...archiveHandlers.tools,
+      ...dailyHandlers.tools,
+      ...commentHandlers.tools,
+    ];
+
+    this.server.setRequestHandler(ListToolsRequestSchema, () => ({ tools }));
+
+    const context = this.createGistContext();
 
     const toolHandlers = {
       ...basicHandlers.handlers,
@@ -280,7 +240,15 @@ class GistpadServer {
           );
         }
 
-        return await handler(request, context);
+        const result = await handler(request, context);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
       } catch (error) {
         if (axios.isAxiosError(error)) {
           throw new McpError(

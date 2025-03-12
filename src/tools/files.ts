@@ -124,20 +124,9 @@ export const fileHandlers: HandlerModule = {
             context.updateGistInCache(response.data);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                id: gistId,
-                                filename,
-                                message: "File updated successfully",
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                id: gistId,
+                filename,
+                message: "File updated successfully",
             };
         },
 
@@ -175,20 +164,9 @@ export const fileHandlers: HandlerModule = {
             context.updateGistInCache(response.data);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                id: gistId,
-                                filename,
-                                message: "File added successfully",
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                id: gistId,
+                filename,
+                message: "File added successfully",
             };
         },
 
@@ -230,20 +208,9 @@ export const fileHandlers: HandlerModule = {
             context.updateGistInCache(response.data);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                id: gistId,
-                                filename,
-                                message: "File deleted successfully",
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                id: gistId,
+                filename,
+                message: "File deleted successfully",
             };
         },
 
@@ -292,21 +259,10 @@ export const fileHandlers: HandlerModule = {
             context.updateGistInCache(response.data);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                id: gistId,
-                                old_filename,
-                                new_filename,
-                                message: "File renamed successfully",
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                id: gistId,
+                old_filename,
+                new_filename,
+                message: "File renamed successfully",
             };
         },
     },

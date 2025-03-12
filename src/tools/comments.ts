@@ -72,26 +72,15 @@ export const commentHandlers: HandlerModule = {
             const comments = response.data as GistComment[];
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                gist_id: gistId,
-                                count: comments.length,
-                                comments: comments.map(comment => ({
-                                    id: comment.id,
-                                    body: comment.body,
-                                    user: comment.user.login,
-                                    created_at: comment.created_at,
-                                    updated_at: comment.updated_at,
-                                }))
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                gist_id: gistId,
+                count: comments.length,
+                comments: comments.map(comment => ({
+                    id: comment.id,
+                    body: comment.body,
+                    user: comment.user.login,
+                    created_at: comment.created_at,
+                    updated_at: comment.updated_at,
+                }))
             };
         },
 
@@ -124,20 +113,9 @@ export const commentHandlers: HandlerModule = {
             const comment = response.data as GistComment;
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                gist_id: gistId,
-                                comment_id: comment.id,
-                                message: "Comment added successfully",
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                gist_id: gistId,
+                comment_id: comment.id,
+                message: "Comment added successfully",
             };
         },
 
@@ -159,20 +137,9 @@ export const commentHandlers: HandlerModule = {
             await context.axiosInstance.delete(`/gists/${gistId}/comments/${commentId}`);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                gist_id: gistId,
-                                comment_id: commentId,
-                                message: "Comment deleted successfully",
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                gist_id: gistId,
+                comment_id: commentId,
+                message: "Comment deleted successfully",
             };
         },
     },

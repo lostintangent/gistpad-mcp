@@ -49,24 +49,13 @@ export const archiveHandlers: HandlerModule = {
                 (gist) => gist.description?.endsWith(" [Archived]")
             );
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                count: archivedGists.length,
-                                gists: archivedGists.map((gist) => ({
-                                    id: gist.id,
-                                    description: gist.description.replace(/ \[Archived\]$/, ""),
-                                    files: Object.keys(gist.files),
-                                    created_at: gist.created_at,
-                                }))
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                count: archivedGists.length,
+                gists: archivedGists.map((gist) => ({
+                    id: gist.id,
+                    description: gist.description.replace(/ \[Archived\]$/, ""),
+                    files: Object.keys(gist.files),
+                    created_at: gist.created_at,
+                }))
             };
         },
 
@@ -103,20 +92,9 @@ export const archiveHandlers: HandlerModule = {
             context.updateGistInCache(response.data);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                id: response.data.id,
-                                description: response.data.description.replace(/ \[Archived\]$/, ""),
-                                message: "Gist archived successfully",
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                id: response.data.id,
+                description: response.data.description.replace(/ \[Archived\]$/, ""),
+                message: "Gist archived successfully",
             };
         },
 
@@ -147,20 +125,9 @@ export const archiveHandlers: HandlerModule = {
             context.updateGistInCache(response.data);
 
             return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(
-                            {
-                                id: response.data.id,
-                                description: response.data.description,
-                                message: "Gist unarchived successfully",
-                            },
-                            null,
-                            2
-                        ),
-                    },
-                ],
+                id: response.data.id,
+                description: response.data.description,
+                message: "Gist unarchived successfully",
             };
         },
     },

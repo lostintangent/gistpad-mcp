@@ -21,10 +21,12 @@ export interface GistFile {
 export interface Gist {
     id: string;
     description: string;
+    files: { [key: string]: GistFile };
     public: boolean;
     created_at: string;
     updated_at: string;
-    files: { [key: string]: GistFile };
+    url: string;
+    share_url: string;
 }
 
 export interface GistHandlerContext {
@@ -53,12 +55,7 @@ export interface RequestWithParams {
 export type ToolHandler = (
     request: RequestWithParams,
     context: GistHandlerContext
-) => Promise<{
-    content: Array<{
-        type: string;
-        text: string;
-    }>;
-}>;
+) => Promise<any>;
 
 export type ToolDefinition = {
     name: string;
