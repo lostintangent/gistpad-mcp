@@ -1,0 +1,28 @@
+{
+  "name": "gistpad",
+  "version": "0.1.0",
+  "description": "Read and manage your GitHub Gists via MCP",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "gistpad": "./build/index.js"
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "prepare": "npm run build",
+    "watch": "tsc --watch",
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js",
+    "publish": "npm publish"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "0.6.0",
+    "axios": "^1.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3"
+  }
+}
