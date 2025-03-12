@@ -80,16 +80,17 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
 - `add_gist_comment` - Add a new comment to a gist.
 - `delete_gist_comment` - Delete a comment from a gist.
 
-<u>Unsupported/future enhancements:</u>
+<ins>Unsupported/future enhancements:</ins>
 
 - Firing a notification when gists are added/updated/deleted
 - Exposing the daily tasks and overdue status as tool context
+- Any of the AI features from gistpad.dev (since the MCP client will have these!)
 
 ## 📁 Included resources
 
 In addition to the above tools, the GistPad MCP server also exposes your gists as resources (using the `gist:///` URI scheme), which allows clients to read them without requiring tool execution.
 
-<u>Unsupported/future enhancements:</u>
+<ins>Unsupported/future enhancements:</ins>
 
 - Firing a notification when gists are added/updated/deleted
 - Exposing archived/starred gists as resources
