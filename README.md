@@ -90,8 +90,9 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
 
 In addition to the above tools, the GistPad MCP server also exposes your gists as resources (using the `gist:///` URI scheme), which allows clients to read them without requiring tool execution.
 
+When you add/delete/duplicate a gist, or change a gist's description, then a notification will be provided to MCP clients, indicating that the list of resources have changed.
+
 <ins>Unsupported/future enhancements:</ins>
 
-- Firing a notification when gists are added/updated/deleted
 - Exposing archived/starred gists as resources
 - Allowing clients to subscribe to updates for specific gists

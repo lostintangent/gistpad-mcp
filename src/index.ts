@@ -110,6 +110,7 @@ class GistpadServer {
     if (this.gists) {
       if (!this.gists.some(g => g.id === gist.id)) {
         this.gists.push(gist);
+        this.server.sendResourceListChanged();
       }
     }
   }
@@ -117,6 +118,7 @@ class GistpadServer {
   private removeGistFromCache(gistId: string) {
     if (this.gists) {
       this.gists = this.gists.filter(g => g.id !== gistId);
+      this.server.sendResourceListChanged();
     }
   }
 
@@ -174,7 +176,12 @@ class GistpadServer {
         if (this.gists) {
           const index = this.gists.findIndex((g) => g.id === gist.id);
           if (index !== -1) {
+            const oldGist = this.gists[index];
             this.gists[index] = gist;
+            // Only notify if the description changed since that affects the resource list
+            if (oldGist.description !== gist.description) {
+              this.server.sendResourceListChanged();
+            }
           }
         }
       },

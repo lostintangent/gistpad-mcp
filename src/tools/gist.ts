@@ -188,6 +188,8 @@ export const gistHandlers: HandlerModule = {
             const gistId = String(request.params.arguments?.id);
             await context.axiosInstance.delete(`/gists/${gistId}`);
 
+            context.removeGistFromCache(gistId);
+
             return {
                 message: "Successfully deleted gist",
             };
