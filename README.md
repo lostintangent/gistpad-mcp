@@ -19,7 +19,7 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
      "mcpServers": {
        "gistpad": {
          "command": "npx",
-         "args": ["-y", "gistpad-mcp"],
+         "args": ["-y", "lostintangent/gistpad-mcp"],
          "env": {
            "GITHUB_TOKEN": "<YOUR_PAT>"
          }
