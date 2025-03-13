@@ -1,5 +1,5 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { Gist, GistHandlerContext, HandlerModule } from "../types.js";
+import { Gist, HandlerContext, ToolModule } from "../types.js";
 
 function getTodaysFilename(): string {
     const today = new Date();
@@ -10,7 +10,7 @@ function getTodaysFilename(): string {
 }
 
 async function createDailyNotesGist(
-    context: GistHandlerContext,
+    context: HandlerContext,
     filename: string
 ): Promise<Gist> {
     const content = `# ${filename.replace(".md", "")}\n`;
@@ -31,7 +31,7 @@ async function createDailyNotesGist(
 }
 
 async function createTodaysNote(
-    context: GistHandlerContext,
+    context: HandlerContext,
     filename: string
 ): Promise<Gist> {
     const content = `# ${filename.replace(".md", "")}\n`;
@@ -50,7 +50,7 @@ async function createTodaysNote(
     return response.data;
 }
 
-export const dailyHandlers: HandlerModule = {
+export const dailyHandlers: ToolModule = {
     tools: [
         {
             name: "get_todays_note",

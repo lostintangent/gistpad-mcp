@@ -1,7 +1,7 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { HandlerModule } from "../types.js";
+import { ToolModule } from "../types.js";
 
-export const fileHandlers: HandlerModule = {
+export const fileHandlers: ToolModule = {
     tools: [
         {
             name: "update_gist_file",

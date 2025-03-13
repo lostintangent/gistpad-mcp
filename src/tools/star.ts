@@ -1,6 +1,6 @@
-import { HandlerModule } from "../types.js";
+import { ToolModule } from "../types.js";
 
-export const starHandlers: HandlerModule = {
+export const starHandlers: ToolModule = {
     tools: [
         {
             name: "list_starred_gists",

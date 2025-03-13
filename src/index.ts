@@ -20,7 +20,7 @@ import {
   fileHandlers,
   starHandlers,
 } from "./tools/index.js";
-import { Gist, GistHandlerContext } from "./types.js";
+import { Gist, HandlerContext } from "./types.js";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 if (!GITHUB_TOKEN) {
@@ -34,6 +34,8 @@ class GistpadServer {
   private gists: Gist[] | null = null;
   private starredGists: Gist[] | null = null;
   private dailyNotesGistId: string | null = null;
+
+  // Gist cache utilties
 
   private filterGists(gists: Gist[]): Gist[] {
     return gists.filter((gist: Gist) => {
@@ -83,17 +85,6 @@ class GistpadServer {
     return allGists;
   }
 
-  private async fetchStarredGists(): Promise<Gist[]> {
-    if (this.starredGists !== null) {
-      return this.starredGists;
-    }
-
-    const response = await this.axiosInstance.get<Gist[]>("/gists/starred");
-    this.starredGists = this.filterGists(response.data);
-
-    return this.starredGists;
-  }
-
   private addGistToCache(gist: Gist) {
     if (this.gists) {
       if (!this.gists.some(g => g.id === gist.id)) {
@@ -124,6 +115,19 @@ class GistpadServer {
     }
   }
 
+  // Starred gist cache utilties
+
+  private async fetchStarredGists(): Promise<Gist[]> {
+    if (this.starredGists !== null) {
+      return this.starredGists;
+    }
+
+    const response = await this.axiosInstance.get<Gist[]>("/gists/starred");
+    this.starredGists = this.filterGists(response.data);
+
+    return this.starredGists;
+  }
+
   private addStarredGist(gist: Gist) {
     if (this.starredGists) {
       if (!this.starredGists.some(g => g.id === gist.id)) {
@@ -148,9 +152,14 @@ class GistpadServer {
         capabilities: {
           resources: {
             subscribe: false,
+
+            // This server will notify clients anytime that a gist
+            // is added, deleted, renamed or duplicated.
             listChanged: true,
           },
           tools: {
+            // This isn't applicable to this MCP server, since there
+            // aren't any scenarios where tool availability is dynamic.
             listChanged: false,
           },
         },
@@ -168,14 +177,13 @@ class GistpadServer {
     this.setupResourceHandlers();
     this.setupToolHandlers();
 
-    this.server.onerror = (error) => console.error("[MCP Error]", error);
     process.on("SIGINT", async () => {
       await this.server.close();
       process.exit(0);
     });
   }
 
-  private createGistContext(): GistHandlerContext {
+  private createGistContext(): HandlerContext {
     return {
       fetchAllGists: () => this.fetchAllGists(),
       fetchStarredGists: () => this.fetchStarredGists(),
@@ -195,14 +203,14 @@ class GistpadServer {
   private setupResourceHandlers() {
     this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
       const context = this.createGistContext();
-      return await resourceHandlers.listResources(context);
+      return resourceHandlers.listResources(context);
     });
 
     this.server.setRequestHandler(
       ReadResourceRequestSchema,
       async (request) => {
         const context = this.createGistContext();
-        return await resourceHandlers.readResource(request.params.uri, context);
+        return resourceHandlers.readResource(request.params.uri, context);
       }
     );
   }
@@ -240,6 +248,7 @@ class GistpadServer {
 
         const context = this.createGistContext();
         const result = await handler(request, context);
+
         return {
           content: [
             {
@@ -248,14 +257,11 @@ class GistpadServer {
             },
           ],
         };
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          throw new McpError(
-            ErrorCode.InternalError,
-            `GitHub API error: ${error.response?.data.message ?? error.message}`
-          );
-        }
-        throw error;
+      } catch (error: any) {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `An error occurred while executing the requested tool: ${error.message}`
+        );
       }
     });
   }
@@ -269,6 +275,6 @@ class GistpadServer {
 
 const server = new GistpadServer();
 server.run().catch((error) => {
-  console.error("An error occurred while running the GistPad server:", error);
+  console.error("An error occurred while running the GistPad MCP server:", error);
   process.exit(1);
 });

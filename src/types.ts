@@ -1,3 +1,5 @@
+// GitHub Gist API types
+
 export interface GistComment {
     id: string;
     body: string;
@@ -28,7 +30,9 @@ export interface Gist {
     share_url: string;
 }
 
-export interface GistHandlerContext {
+// MCP / GistPad server types
+
+export interface HandlerContext {
     fetchAllGists: () => Promise<Gist[]>;
     fetchStarredGists: () => Promise<Gist[]>;
     dailyNotesGistId: string | null;
@@ -52,7 +56,7 @@ export interface RequestWithParams {
 
 export type ToolHandler = (
     request: RequestWithParams,
-    context: GistHandlerContext
+    context: HandlerContext
 ) => Promise<any>;
 
 export type ToolDefinition = {
@@ -65,7 +69,28 @@ export type ToolDefinition = {
     };
 };
 
-export interface HandlerModule {
+export interface ToolModule {
     handlers: Record<string, ToolHandler>;
     tools: ToolDefinition[];
+}
+
+export interface ResourceHandlers {
+    listResources: (context: HandlerContext) => Promise<{
+        resources: Array<{
+            uri: string;
+            name: string;
+            mimeType: "application/json";
+        }>;
+    }>;
+
+    readResource: (
+        uri: string,
+        context: HandlerContext
+    ) => Promise<{
+        contents: Array<{
+            uri: string;
+            mimeType: "application/json";
+            text: string;
+        }>;
+    }>;
 }

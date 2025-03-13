@@ -1,25 +1,4 @@
-import { Gist, GistHandlerContext } from "../types.js";
-
-export interface ResourceHandlers {
-    listResources: (context: GistHandlerContext) => Promise<{
-        resources: Array<{
-            uri: string;
-            name: string;
-            mimeType: "application/json";
-        }>;
-    }>;
-
-    readResource: (
-        uri: string,
-        context: GistHandlerContext
-    ) => Promise<{
-        contents: Array<{
-            uri: string;
-            mimeType: "application/json";
-            text: string;
-        }>;
-    }>;
-}
+import { Gist, ResourceHandlers } from "../types.js";
 
 export const resourceHandlers: ResourceHandlers = {
     listResources: async (context) => {

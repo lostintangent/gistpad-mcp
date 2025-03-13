@@ -1,7 +1,7 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { Gist, HandlerModule } from "../types.js";
+import { Gist, ToolModule } from "../types.js";
 
-export const gistHandlers: HandlerModule = {
+export const gistHandlers: ToolModule = {
     tools: [
         {
             name: "list_gists",
