@@ -33,6 +33,7 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
 1. :partying_face: Start having fun with gists + MCP! For example, try things like...
 
    1. `How many gists have I updated this month?`
+   1. `What are my unfinished todos for today?`
    1. `Create a new gist about the JavaScript programming language`
    1. `Archive my gist about <foo>`
    1. `Give me a share URL for the gist about <bar>`
@@ -59,8 +60,10 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
 ### Daily notes
 
 - `get_todays_note` - Get or create today's daily note.
+- `update_todays_note` - Update the content of today's daily note.
 - `list_daily_notes` - List all of your daily notes.
-- `get_daily_note` - Get the contents of a specific daily note by date
+- `get_daily_note` - Get the contents of a specific daily note by date.
+- `delete_daily_note` - Delete a specific daily note by date.
 
 ### Starring
 
@@ -82,7 +85,6 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
 
 <ins>Unsupported/future enhancements:</ins>
 
-- Firing a notification when gists are added/updated/deleted
 - Exposing the daily tasks and overdue status as tool context
 - Any of the AI features from gistpad.dev (since the MCP client will have these!)
 

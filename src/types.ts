@@ -1,4 +1,3 @@
-
 export interface GistComment {
     id: string;
     body: string;
@@ -37,7 +36,6 @@ export interface GistHandlerContext {
     updateGistInCache: (gist: Gist) => void;
     addGistToCache: (gist: Gist) => void;
     removeGistFromCache: (gistId: string) => void;
-    invalidateCache: () => void;
 
     axiosInstance: any;
 

@@ -5,7 +5,8 @@ export const archiveHandlers: HandlerModule = {
     tools: [
         {
             name: "list_archived_gists",
-            description: "List all archived gists (gists with [Archived] in description)",
+            description:
+                "List all of your archived gists",
             inputSchema: {
                 type: "object",
                 properties: {},
@@ -14,7 +15,7 @@ export const archiveHandlers: HandlerModule = {
         },
         {
             name: "archive_gist",
-            description: "Archive a gist by appending [Archived] to its description",
+            description: "Archive a gist by",
             inputSchema: {
                 type: "object",
                 properties: {
@@ -28,7 +29,8 @@ export const archiveHandlers: HandlerModule = {
         },
         {
             name: "unarchive_gist",
-            description: "Unarchive a gist by removing [Archived] from its description",
+            description:
+                "Unarchive a gist",
             inputSchema: {
                 type: "object",
                 properties: {
@@ -45,8 +47,8 @@ export const archiveHandlers: HandlerModule = {
     handlers: {
         list_archived_gists: async (request, context) => {
             const gists = await context.fetchAllGists();
-            const archivedGists = gists.filter(
-                (gist) => gist.description?.endsWith(" [Archived]")
+            const archivedGists = gists.filter((gist) =>
+                gist.description?.endsWith(" [Archived]")
             );
             return {
                 count: archivedGists.length,
@@ -55,14 +57,15 @@ export const archiveHandlers: HandlerModule = {
                     description: gist.description.replace(/ \[Archived\]$/, ""),
                     files: Object.keys(gist.files),
                     created_at: gist.created_at,
-                }))
+                    updated_at: gist.updated_at,
+                })),
             };
         },
 
         archive_gist: async (request, context) => {
             const gistId = String(request.params.arguments?.id);
             const gists = await context.fetchAllGists();
-            const gist = gists.find(g => g.id === gistId);
+            const gist = gists.find((g) => g.id === gistId);
 
             if (!gist) {
                 throw new McpError(
@@ -74,15 +77,12 @@ export const archiveHandlers: HandlerModule = {
             if (gist.description === "📆 Daily notes") {
                 throw new McpError(
                     ErrorCode.InvalidParams,
-                    "Cannot archive daily notes gist"
+                    "Cannot archive daily notes"
                 );
             }
 
             if (gist.description?.endsWith(" [Archived]")) {
-                throw new McpError(
-                    ErrorCode.InvalidParams,
-                    "Gist is already archived"
-                );
+                throw new McpError(ErrorCode.InvalidParams, "Gist is already archived");
             }
 
             const response = await context.axiosInstance.patch(`/gists/${gistId}`, {
@@ -101,7 +101,7 @@ export const archiveHandlers: HandlerModule = {
         unarchive_gist: async (request, context) => {
             const gistId = String(request.params.arguments?.id);
             const gists = await context.fetchAllGists();
-            const gist = gists.find(g => g.id === gistId);
+            const gist = gists.find((g) => g.id === gistId);
 
             if (!gist) {
                 throw new McpError(
@@ -111,10 +111,7 @@ export const archiveHandlers: HandlerModule = {
             }
 
             if (!gist.description?.endsWith(" [Archived]")) {
-                throw new McpError(
-                    ErrorCode.InvalidParams,
-                    "Gist is not archived"
-                );
+                throw new McpError(ErrorCode.InvalidParams, "Gist is not archived");
             }
 
             const newDescription = gist.description.replace(/ \[Archived\]$/, "");

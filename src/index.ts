@@ -35,23 +35,6 @@ class GistpadServer {
   private starredGists: Gist[] | null = null;
   private dailyNotesGistId: string | null = null;
 
-  private async findDailyNotesGistId(gists: Gist[]): Promise<string> {
-    if (this.dailyNotesGistId) {
-      return this.dailyNotesGistId;
-    }
-
-    const dailyNotesGist = gists.find(
-      (gist) => gist.description === "📆 Daily notes"
-    );
-
-    if (!dailyNotesGist) {
-      throw new McpError(ErrorCode.InternalError, "Daily notes gist not found");
-    }
-
-    this.dailyNotesGistId = dailyNotesGist.id;
-    return dailyNotesGist.id;
-  }
-
   private filterGists(gists: Gist[]): Gist[] {
     return gists.filter((gist: Gist) => {
       const files = Object.entries(gist.files);
@@ -89,8 +72,13 @@ class GistpadServer {
 
     this.gists = allGists;
 
-    // Find and set daily notes gist ID
-    await this.findDailyNotesGistId(allGists);
+    const dailyNotesGist = this.gists.find(
+      (gist) => gist.description === "📆 Daily notes"
+    );
+
+    if (dailyNotesGist) {
+      this.dailyNotesGistId = dailyNotesGist.id;
+    }
 
     return allGists;
   }
@@ -122,6 +110,20 @@ class GistpadServer {
     }
   }
 
+  private updateGistInCache(gist: Gist) {
+    if (this.gists) {
+      const index = this.gists.findIndex((g) => g.id === gist.id);
+      if (index !== -1) {
+        const oldGist = this.gists[index];
+        this.gists[index] = gist;
+        // Only notify if the description changed since that affects the resource list
+        if (oldGist.description !== gist.description) {
+          this.server.sendResourceListChanged();
+        }
+      }
+    }
+  }
+
   private addStarredGist(gist: Gist) {
     if (this.starredGists) {
       if (!this.starredGists.some(g => g.id === gist.id)) {
@@ -140,12 +142,17 @@ class GistpadServer {
     this.server = new Server(
       {
         name: "gistpad",
-        version: "0.1.0",
+        version: "0.2.1",
       },
       {
         capabilities: {
-          resources: {},
-          tools: {},
+          resources: {
+            subscribe: false,
+            listChanged: true,
+          },
+          tools: {
+            listChanged: false,
+          },
         },
       }
     );
@@ -172,27 +179,13 @@ class GistpadServer {
     return {
       fetchAllGists: () => this.fetchAllGists(),
       fetchStarredGists: () => this.fetchStarredGists(),
-      updateGistInCache: (gist: Gist) => {
-        if (this.gists) {
-          const index = this.gists.findIndex((g) => g.id === gist.id);
-          if (index !== -1) {
-            const oldGist = this.gists[index];
-            this.gists[index] = gist;
-            // Only notify if the description changed since that affects the resource list
-            if (oldGist.description !== gist.description) {
-              this.server.sendResourceListChanged();
-            }
-          }
-        }
-      },
-      invalidateCache: () => {
-        this.gists = null;
-      },
+
       axiosInstance: this.axiosInstance,
       dailyNotesGistId: this.dailyNotesGistId,
 
       addGistToCache: (gist) => this.addGistToCache(gist),
       removeGistFromCache: (gistId) => this.removeGistFromCache(gistId),
+      updateGistInCache: (gist) => this.updateGistInCache(gist),
 
       addStarredGist: (gist) => this.addStarredGist(gist),
       removeStarredGist: (gistId) => this.removeStarredGist(gistId),
@@ -226,8 +219,6 @@ class GistpadServer {
 
     this.server.setRequestHandler(ListToolsRequestSchema, () => ({ tools }));
 
-    const context = this.createGistContext();
-
     const toolHandlers = {
       ...basicHandlers.handlers,
       ...fileHandlers.handlers,
@@ -247,6 +238,7 @@ class GistpadServer {
           );
         }
 
+        const context = this.createGistContext();
         const result = await handler(request, context);
         return {
           content: [

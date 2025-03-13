@@ -59,7 +59,7 @@ export const commentHandlers: HandlerModule = {
         list_gist_comments: async (request, context) => {
             const gistId = String(request.params.arguments?.id);
             const gists = await context.fetchAllGists();
-            const gist = gists.find(g => g.id === gistId);
+            const gist = gists.find((g) => g.id === gistId);
 
             if (!gist) {
                 throw new McpError(
@@ -68,24 +68,28 @@ export const commentHandlers: HandlerModule = {
                 );
             }
 
-            const response = await context.axiosInstance.get(`/gists/${gistId}/comments`);
+            const response = await context.axiosInstance.get(
+                `/gists/${gistId}/comments`
+            );
             const comments = response.data as GistComment[];
 
             return {
                 gist_id: gistId,
                 count: comments.length,
-                comments: comments.map(comment => ({
+                comments: comments.map((comment) => ({
                     id: comment.id,
                     body: comment.body,
                     user: comment.user.login,
                     created_at: comment.created_at,
                     updated_at: comment.updated_at,
-                }))
+                })),
             };
         },
 
         add_gist_comment: async (request, context) => {
-            const args = request.params.arguments as { id?: string; body?: string } | undefined;
+            const args = request.params.arguments as
+                | { id?: string; body?: string }
+                | undefined;
             const gistId = String(args?.id);
             const body = args?.body;
 
@@ -97,7 +101,7 @@ export const commentHandlers: HandlerModule = {
             }
 
             const gists = await context.fetchAllGists();
-            const gist = gists.find(g => g.id === gistId);
+            const gist = gists.find((g) => g.id === gistId);
 
             if (!gist) {
                 throw new McpError(
@@ -106,9 +110,12 @@ export const commentHandlers: HandlerModule = {
                 );
             }
 
-            const response = await context.axiosInstance.post(`/gists/${gistId}/comments`, {
-                body: body.trim()
-            });
+            const response = await context.axiosInstance.post(
+                `/gists/${gistId}/comments`,
+                {
+                    body: body.trim(),
+                }
+            );
 
             const comment = response.data as GistComment;
 
@@ -120,12 +127,14 @@ export const commentHandlers: HandlerModule = {
         },
 
         delete_gist_comment: async (request, context) => {
-            const args = request.params.arguments as { gist_id?: string; comment_id?: string } | undefined;
+            const args = request.params.arguments as
+                | { gist_id?: string; comment_id?: string }
+                | undefined;
             const gistId = String(args?.gist_id);
             const commentId = String(args?.comment_id);
 
             const gists = await context.fetchAllGists();
-            const gist = gists.find(g => g.id === gistId);
+            const gist = gists.find((g) => g.id === gistId);
 
             if (!gist) {
                 throw new McpError(
@@ -134,7 +143,9 @@ export const commentHandlers: HandlerModule = {
                 );
             }
 
-            await context.axiosInstance.delete(`/gists/${gistId}/comments/${commentId}`);
+            await context.axiosInstance.delete(
+                `/gists/${gistId}/comments/${commentId}`
+            );
 
             return {
                 gist_id: gistId,

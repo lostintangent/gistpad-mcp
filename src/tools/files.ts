@@ -91,12 +91,14 @@ export const fileHandlers: HandlerModule = {
 
     handlers: {
         update_gist_file: async (request, context) => {
-            const args = request.params.arguments as { id?: string; filename?: string; content?: string } | undefined;
+            const args = request.params.arguments as
+                | { id?: string; filename?: string; content?: string }
+                | undefined;
             const gistId = String(args?.id);
             const filename = String(args?.filename);
             const content = args?.content;
             const gists = await context.fetchAllGists();
-            const gist = gists.find(g => g.id === gistId);
+            const gist = gists.find((g) => g.id === gistId);
 
             if (!gist) {
                 throw new McpError(
@@ -115,12 +117,11 @@ export const fileHandlers: HandlerModule = {
             const response = await context.axiosInstance.patch(`/gists/${gistId}`, {
                 files: {
                     [filename]: {
-                        content: content
-                    }
-                }
+                        content,
+                    },
+                },
             });
 
-            // Update the cached gist
             context.updateGistInCache(response.data);
 
             return {
@@ -131,12 +132,14 @@ export const fileHandlers: HandlerModule = {
         },
 
         add_gist_file: async (request, context) => {
-            const args = request.params.arguments as { id?: string; filename?: string; content?: string } | undefined;
+            const args = request.params.arguments as
+                | { id?: string; filename?: string; content?: string }
+                | undefined;
             const gistId = String(args?.id);
             const filename = String(args?.filename);
             const content = args?.content;
             const gists = await context.fetchAllGists();
-            const gist = gists.find(g => g.id === gistId);
+            const gist = gists.find((g) => g.id === gistId);
 
             if (!gist) {
                 throw new McpError(
@@ -155,9 +158,9 @@ export const fileHandlers: HandlerModule = {
             const response = await context.axiosInstance.patch(`/gists/${gistId}`, {
                 files: {
                     [filename]: {
-                        content: content
-                    }
-                }
+                        content: content,
+                    },
+                },
             });
 
             // Update the cached gist
@@ -171,11 +174,13 @@ export const fileHandlers: HandlerModule = {
         },
 
         delete_gist_file: async (request, context) => {
-            const args = request.params.arguments as { id?: string; filename?: string } | undefined;
+            const args = request.params.arguments as
+                | { id?: string; filename?: string }
+                | undefined;
             const gistId = String(args?.id);
             const filename = String(args?.filename);
             const gists = await context.fetchAllGists();
-            const gist = gists.find(g => g.id === gistId);
+            const gist = gists.find((g) => g.id === gistId);
 
             if (!gist) {
                 throw new McpError(
@@ -200,8 +205,8 @@ export const fileHandlers: HandlerModule = {
 
             const response = await context.axiosInstance.patch(`/gists/${gistId}`, {
                 files: {
-                    [filename]: null
-                }
+                    [filename]: null,
+                },
             });
 
             // Update the cached gist
@@ -215,12 +220,14 @@ export const fileHandlers: HandlerModule = {
         },
 
         rename_gist_file: async (request, context) => {
-            const args = request.params.arguments as { id?: string; old_filename?: string; new_filename?: string } | undefined;
+            const args = request.params.arguments as
+                | { id?: string; old_filename?: string; new_filename?: string }
+                | undefined;
             const gistId = String(args?.id);
             const old_filename = String(args?.old_filename);
             const new_filename = String(args?.new_filename);
             const gists = await context.fetchAllGists();
-            const gist = gists.find(g => g.id === gistId);
+            const gist = gists.find((g) => g.id === gistId);
 
             if (!gist) {
                 throw new McpError(
@@ -250,9 +257,9 @@ export const fileHandlers: HandlerModule = {
                 files: {
                     [old_filename]: null,
                     [new_filename]: {
-                        content: content
-                    }
-                }
+                        content: content,
+                    },
+                },
             });
 
             // Update the cached gist
