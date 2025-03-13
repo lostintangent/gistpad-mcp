@@ -29,6 +29,12 @@ export interface Gist {
     share_url: string;
 }
 
+export interface ResourceNotification {
+    type: "add" | "delete";
+    resourceType: "gist";
+    resourceId: string;
+}
+
 export interface GistHandlerContext {
     fetchAllGists: () => Promise<Gist[]>;
     fetchStarredGists: () => Promise<Gist[]>;
@@ -43,6 +49,9 @@ export interface GistHandlerContext {
 
     addStarredGist: (gist: Gist) => void;
     removeStarredGist: (gistId: string) => void;
+
+    // Method to trigger resource notifications when gists are added/deleted
+    notifyResourceChange?: (notification: ResourceNotification) => void;
 }
 
 export interface RequestWithParams {

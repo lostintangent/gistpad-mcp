@@ -177,6 +177,13 @@ export const gistHandlers: HandlerModule = {
 
             context.addGistToCache(response.data);
 
+            // Trigger resource notification for gist creation
+            context.notifyResourceChange?.({
+                type: "add",
+                resourceType: "gist",
+                resourceId: response.data.id
+            });
+
             return {
                 id: response.data.id,
                 url: `https://gistpad.dev/#/${response.data.id}`,
@@ -187,6 +194,15 @@ export const gistHandlers: HandlerModule = {
         delete_gist: async (request, context) => {
             const gistId = String(request.params.arguments?.id);
             await context.axiosInstance.delete(`/gists/${gistId}`);
+
+            context.removeGistFromCache(gistId);
+
+            // Trigger resource notification for gist deletion
+            context.notifyResourceChange?.({
+                type: "delete",
+                resourceType: "gist", 
+                resourceId: gistId
+            });
 
             return {
                 message: "Successfully deleted gist",
