@@ -134,7 +134,7 @@ class GistpadServer {
     });
   }
 
-  private createGistContext(): RequestContext {
+  private createRequestContext(): RequestContext {
     return {
       gistStore: this.gistStore,
       starredGistStore: this.starredGistStore,
@@ -145,14 +145,14 @@ class GistpadServer {
 
   private setupResourceHandlers() {
     this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
-      const context = this.createGistContext();
+      const context = this.createRequestContext();
       return resourceHandlers.listResources(context);
     });
 
     this.server.setRequestHandler(
       ReadResourceRequestSchema,
       async ({ params: { uri } }) => {
-        const context = this.createGistContext();
+        const context = this.createRequestContext();
         return resourceHandlers.readResource(uri, context);
       }
     );
@@ -189,9 +189,10 @@ class GistpadServer {
           );
         }
 
-        const context = this.createGistContext();
-        const result = await handler(request.params.arguments || {}, context);
+        const args = request.params.arguments || {};
+        const context = this.createRequestContext();
 
+        const result = await handler(args, context);
         return {
           content: [
             {
