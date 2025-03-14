@@ -24,19 +24,19 @@ async function createDailyNotesGist(
         },
     });
 
-    context.gistStore.add(response.data);
-    context.dailyNotesGistId = response.data.id;
+    context.gistStore.setDailyNotes(response.data);
 
     return response.data;
 }
 
 async function createTodaysNote(
     context: RequestContext,
+    dailyNotes: Gist,
     filename: string
 ): Promise<Gist> {
     const content = `# ${filename.replace(".md", "")}\n`;
     const response = await context.axiosInstance.patch(
-        `/${context.dailyNotesGistId}`,
+        `/${dailyNotes.id}`,
         {
             files: {
                 [filename]: {
@@ -128,10 +128,10 @@ export const dailyHandlers: ToolModule = {
             // already exist.
 
             const filename = getTodaysFilename();
-            const gists = await context.gistStore.getAll();
+            const dailyNotes = await context.gistStore.getDailyNotes();
 
             const response = await context.axiosInstance.patch(
-                `/${context.dailyNotesGistId}`,
+                `/${dailyNotes!.id}`,
                 {
                     files: {
                         [filename]: {
@@ -147,54 +147,45 @@ export const dailyHandlers: ToolModule = {
 
         get_todays_note: async (args, context) => {
             const filename = getTodaysFilename();
-            const gists = await context.gistStore.getAll();
+            let dailyNotes = await context.gistStore.getDailyNotes();
 
-            let dailyNotesGist: Gist | undefined;
-            if (!context.dailyNotesGistId) {
-                dailyNotesGist = await createDailyNotesGist(context, filename);
+            if (!dailyNotes) {
+                dailyNotes = await createDailyNotesGist(context, filename);
             } else {
-                dailyNotesGist = gists.find(
-                    (gist) => gist.id === context.dailyNotesGistId
-                )!;
-
-                if (!dailyNotesGist.files[filename]) {
-                    dailyNotesGist = await createTodaysNote(context, filename);
+                if (!dailyNotes.files[filename]) {
+                    dailyNotes = await createTodaysNote(context, dailyNotes, filename);
                 } else {
                     // Check if the file contents are empty
-                    const contents = dailyNotesGist.files[filename].content;
+                    const contents = dailyNotes.files[filename].content;
                     if (!contents) {
                         // Fetch the daily gist by ID
                         const response = await context.axiosInstance.get(
-                            `/${context.dailyNotesGistId}`
+                            `/${dailyNotes.id}`
                         );
-                        dailyNotesGist = response.data;
-                        context.gistStore.update(dailyNotesGist!);
+                        dailyNotes = response.data;
+                        context.gistStore.update(dailyNotes!);
                     }
                 }
             }
 
-            return dailyNotesGist!.files[filename].content;
+            return dailyNotes!.files[filename].content;
         },
 
         list_daily_notes: async (args, context) => {
-            const gists = await context.gistStore.getAll();
+            const dailyNotes = await context.gistStore.getDailyNotes();
 
             // The user doesn't have an active daily notes gist
             // so just return an empty list, without creating one.
-            if (!context.dailyNotesGistId) {
+            if (!dailyNotes) {
                 return {
                     count: 0,
                     notes: [],
                 };
             }
 
-            const dailyNotesGist = gists.find(
-                (gist) => gist.id === context.dailyNotesGistId
-            )!;
-
             return {
-                count: Object.keys(dailyNotesGist.files).length,
-                notes: Object.entries(dailyNotesGist.files).map(([filename]) => ({
+                count: Object.keys(dailyNotes.files).length,
+                notes: Object.entries(dailyNotes.files).map(([filename]) => ({
                     date: filename.replace(".md", ""),
                 })),
             };
@@ -205,21 +196,8 @@ export const dailyHandlers: ToolModule = {
                 throw new McpError(ErrorCode.InvalidParams, "Date is required");
             }
 
-            const gists = await context.gistStore.getAll();
-
-            // Check after fetch since fetchAllGists updates the context
-            if (!context.dailyNotesGistId) {
-                throw new McpError(
-                    ErrorCode.InvalidRequest,
-                    "Requested daily note doesn't exist"
-                );
-            }
-
-            const dailyNotesGist = gists.find(
-                (gist) => gist.id === context.dailyNotesGistId
-            )!;
-
-            const file = dailyNotesGist.files[`${date}.md`];
+            const dailyNotes = await context.gistStore.getDailyNotes();
+            const file = dailyNotes!.files[`${date}.md`];
             if (!file) {
                 throw new McpError(
                     ErrorCode.InvalidRequest,
@@ -236,20 +214,9 @@ export const dailyHandlers: ToolModule = {
             }
 
             const filename = `${date}.md`;
-            const gists = await context.gistStore.getAll();
+            const dailyNotes = await context.gistStore.getDailyNotes();
 
-            if (!context.dailyNotesGistId) {
-                throw new McpError(
-                    ErrorCode.InvalidRequest,
-                    "The specified daily note doesn't exist"
-                );
-            }
-
-            const dailyNotesGist = gists.find(
-                (gist) => gist.id === context.dailyNotesGistId
-            )!;
-
-            if (!dailyNotesGist.files[filename]) {
+            if (!dailyNotes!.files[filename]) {
                 throw new McpError(
                     ErrorCode.InvalidRequest,
                     "The specified daily note doesn't exist"
@@ -257,7 +224,7 @@ export const dailyHandlers: ToolModule = {
             }
 
             const response = await context.axiosInstance.patch(
-                `/${context.dailyNotesGistId}`,
+                `/${dailyNotes!.id}`,
                 {
                     files: {
                         [filename]: null,

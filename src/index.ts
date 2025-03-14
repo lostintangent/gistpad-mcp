@@ -12,7 +12,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import axios from "axios";
 import { resourceHandlers } from "./resources/gists.js";
-import { GistStore } from "./store.js";
+import { StarredGistStore, YourGistStore } from "./store.js";
 import {
   archiveHandlers,
   basicHandlers,
@@ -21,7 +21,7 @@ import {
   fileHandlers,
   starHandlers,
 } from "./tools/index.js";
-import { Gist, RequestContext } from "./types.js";
+import { RequestContext } from "./types.js";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 if (!GITHUB_TOKEN) {
@@ -32,67 +32,17 @@ class GistpadServer {
   private server: Server;
   private axiosInstance;
 
-  private gistStore: GistStore;
-  private starredGistStore: GistStore;
-  private dailyNotesGistId: string | null = null;
-
-  private filterGists(gists: Gist[]): Gist[] {
-    return gists.filter((gist: Gist) => {
-      const files = Object.entries(gist.files);
-      return files.every(
-        ([_, file]) =>
-          file.language === "Markdown" || file.filename.endsWith(".tldraw")
-      );
-    });
-  }
-
-  private async fetchAllGists(): Promise<Gist[]> {
-    const allGists: Gist[] = [];
-    let page = 1;
-    const perPage = 100;
-
-    while (true) {
-      const response = await this.axiosInstance.get<Gist[]>("", {
-        params: {
-          per_page: perPage,
-          page: page,
-        },
-      });
-
-      const gists = response.data;
-      const filteredGists = this.filterGists(gists);
-      allGists.push(...filteredGists);
-
-      if (gists.length < perPage) {
-        break;
-      }
-
-      page++;
-    }
-
-    const dailyNotesGist = allGists.find(
-      (gist) => gist.description === "📆 Daily notes"
-    );
-
-    if (dailyNotesGist) {
-      this.dailyNotesGistId = dailyNotesGist.id;
-    }
-
-    return allGists;
-  }
-
-  private async fetchStarredGists(): Promise<Gist[]> {
-    const response = await this.axiosInstance.get<Gist[]>("/starred");
-    return this.filterGists(response.data);
-  }
+  private gistStore: YourGistStore;
+  private starredGistStore: StarredGistStore;
 
   constructor() {
-    this.gistStore = new GistStore(
-      () => this.fetchAllGists(),
-      () => this.server.sendResourceListChanged()
-    );
-
-    this.starredGistStore = new GistStore(() => this.fetchStarredGists());
+    this.axiosInstance = axios.create({
+      baseURL: "https://api.github.com/gists",
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Accept: "application/vnd.github.v3+json",
+      },
+    });
 
     this.server = new Server(
       {
@@ -117,13 +67,12 @@ class GistpadServer {
       }
     );
 
-    this.axiosInstance = axios.create({
-      baseURL: "https://api.github.com/gists",
-      headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        Accept: "application/vnd.github.v3+json",
-      },
-    });
+    this.gistStore = new YourGistStore(
+      this.axiosInstance,
+      () => this.server.sendResourceListChanged()
+    );
+
+    this.starredGistStore = new StarredGistStore(this.axiosInstance);
 
     this.setupResourceHandlers();
     this.setupToolHandlers();
@@ -138,7 +87,6 @@ class GistpadServer {
     return {
       gistStore: this.gistStore,
       starredGistStore: this.starredGistStore,
-      dailyNotesGistId: this.dailyNotesGistId,
       axiosInstance: this.axiosInstance,
     };
   }

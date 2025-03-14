@@ -1,4 +1,4 @@
-import { GistStore } from "./store.js";
+import { StarredGistStore, YourGistStore } from "./store.js";
 
 // GitHub Gist API types
 
@@ -35,9 +35,8 @@ export interface Gist {
 // MCP / GistPad server types
 
 export interface RequestContext {
-    gistStore: GistStore;
-    starredGistStore: GistStore;
-    dailyNotesGistId: string | null;
+    gistStore: YourGistStore;
+    starredGistStore: StarredGistStore;
     axiosInstance: any;
 }
 
