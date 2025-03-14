@@ -99,8 +99,8 @@ export const gistHandlers: ToolModule = {
     ],
 
     handlers: {
-        list_gists: async (request, context) => {
-            const gists = await context.fetchAllGists();
+        list_gists: async (args, context) => {
+            const gists = await context.gistStore.getAll();
             const filteredGists = gists.filter(
                 (gist) =>
                     gist.description !== "📆 Daily notes" &&
@@ -122,13 +122,11 @@ export const gistHandlers: ToolModule = {
             };
         },
 
-        get_gist: async (request, context) => {
-            const gistId = String(request.params.arguments?.id);
-
-            const response = await context.axiosInstance.get(`/gists/${gistId}`);
+        get_gist: async ({ id }, context) => {
+            const response = await context.axiosInstance.get(`/${id}`);
             const gist: Gist = response.data;
 
-            context.updateGistInCache(gist);
+            context.gistStore.update(gist);
 
             return {
                 id: gist.id,
@@ -151,12 +149,12 @@ export const gistHandlers: ToolModule = {
             };
         },
 
-        create_gist: async (request, context) => {
+        create_gist: async (args, context) => {
             const {
                 content,
                 description = "",
                 public: isPublic = false,
-            } = request.params.arguments ?? {};
+            } = args;
 
             if (!description || !content) {
                 throw new McpError(
@@ -165,7 +163,7 @@ export const gistHandlers: ToolModule = {
                 );
             }
 
-            const response = await context.axiosInstance.post("/gists", {
+            const response = await context.axiosInstance.post("", {
                 description,
                 public: isPublic,
                 files: {
@@ -175,7 +173,7 @@ export const gistHandlers: ToolModule = {
                 },
             });
 
-            context.addGistToCache(response.data);
+            context.gistStore.add(response.data);
 
             return {
                 id: response.data.id,
@@ -184,20 +182,17 @@ export const gistHandlers: ToolModule = {
             };
         },
 
-        delete_gist: async (request, context) => {
-            const gistId = String(request.params.arguments?.id);
-            await context.axiosInstance.delete(`/gists/${gistId}`);
+        delete_gist: async ({ id }, context) => {
+            await context.axiosInstance.delete(`/${id}`);
 
-            context.removeGistFromCache(gistId);
+            context.gistStore.remove(id as string);
 
             return {
                 message: "Successfully deleted gist",
             };
         },
 
-        update_gist_description: async (request, context) => {
-            const { id, description } = request.params.arguments ?? {};
-
+        update_gist_description: async ({ id, description }, context) => {
             if (!id || !description) {
                 throw new McpError(
                     ErrorCode.InvalidParams,
@@ -205,34 +200,32 @@ export const gistHandlers: ToolModule = {
                 );
             }
 
-            const response = await context.axiosInstance.patch(`/gists/${id}`, {
+            const response = await context.axiosInstance.patch(`/${id}`, {
                 description,
             });
 
-            context.updateGistInCache(response.data);
+            context.gistStore.update(response.data);
 
             return {
-                id: response.data.id,
+                id,
                 description: response.data.description,
                 message: "Successfully updated gist description",
             };
         },
 
-        duplicate_gist: async (request, context) => {
-            const gistId = String(request.params.arguments?.id);
-
-            const gists = await context.fetchAllGists();
-            const sourceGist = gists.find((gist) => gist.id === gistId);
+        duplicate_gist: async ({ id }, context) => {
+            const gists = await context.gistStore.getAll();
+            const sourceGist = gists.find((gist: Gist) => gist.id === id);
 
             if (!sourceGist) {
                 throw new McpError(
                     ErrorCode.InvalidParams,
-                    `Gist with ID ${gistId} not found`
+                    `Gist with ID ${id} not found`
                 );
             }
 
             const newDescription = `${sourceGist.description || ""} (Copy)`.trim();
-            const response = await context.axiosInstance.post("/gists", {
+            const response = await context.axiosInstance.post("", {
                 description: newDescription,
                 public: sourceGist.public,
                 files: Object.fromEntries(
@@ -243,10 +236,10 @@ export const gistHandlers: ToolModule = {
                 ),
             });
 
-            context.addGistToCache(response.data);
+            context.gistStore.add(response.data);
 
             return {
-                source_id: gistId,
+                source_id: id,
                 new_id: response.data.id,
                 description: newDescription,
                 files: Object.keys(response.data.files),

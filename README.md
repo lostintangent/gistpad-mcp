@@ -81,11 +81,13 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
 
 - `list_gist_comments` - List all comments for a specified gist.
 - `add_gist_comment` - Add a new comment to a gist.
+- `edit_gist_comment` - Update the content of an existing comment.
 - `delete_gist_comment` - Delete a comment from a gist.
 
 <ins>Unsupported/future enhancements:</ins>
 
 - Exposing the daily tasks and overdue status as tool context
+- Paginating comments or starred gists (these aren't commonly long lists!)
 - Any of the AI features from gistpad.dev (since the MCP client will have these!)
 
 ## 📁 Included resources

@@ -2,7 +2,7 @@ import { Gist, ResourceHandlers } from "../types.js";
 
 export const resourceHandlers: ResourceHandlers = {
     listResources: async (context) => {
-        const gists = await context.fetchAllGists();
+        const gists = await context.gistStore.getAll();
         return {
             resources: gists
                 // Exclude archived gists, since they're not expected to be used often.
@@ -21,10 +21,10 @@ export const resourceHandlers: ResourceHandlers = {
     readResource: async (uri, context) => {
         const gistId = new URL(uri).pathname.replace(/^\//, "");
 
-        const response = await context.axiosInstance.get(`/gists/${gistId}`);
+        const response = await context.axiosInstance.get(`/${gistId}`);
         const gist: Gist = response.data;
 
-        context.updateGistInCache(gist);
+        context.gistStore.update(gist);
 
         return {
             contents: [

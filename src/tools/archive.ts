@@ -1,5 +1,5 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { ToolModule } from "../types.js";
+import { Gist, ToolModule } from "../types.js";
 
 export const archiveHandlers: ToolModule = {
     tools: [
@@ -45,9 +45,9 @@ export const archiveHandlers: ToolModule = {
     ],
 
     handlers: {
-        list_archived_gists: async (request, context) => {
-            const gists = await context.fetchAllGists();
-            const archivedGists = gists.filter((gist) =>
+        list_archived_gists: async (args, context) => {
+            const gists = await context.gistStore.getAll();
+            const archivedGists = gists.filter((gist: Gist) =>
                 gist.description?.endsWith(" [Archived]")
             );
             return {
@@ -62,15 +62,14 @@ export const archiveHandlers: ToolModule = {
             };
         },
 
-        archive_gist: async (request, context) => {
-            const gistId = String(request.params.arguments?.id);
-            const gists = await context.fetchAllGists();
-            const gist = gists.find((g) => g.id === gistId);
+        archive_gist: async ({ id }, context) => {
+            const gists = await context.gistStore.getAll();
+            const gist = gists.find((g: Gist) => g.id === id);
 
             if (!gist) {
                 throw new McpError(
                     ErrorCode.InvalidParams,
-                    `Gist with ID '${gistId}' not found`
+                    `Gist with ID '${id}' not found`
                 );
             }
 
@@ -85,11 +84,11 @@ export const archiveHandlers: ToolModule = {
                 throw new McpError(ErrorCode.InvalidParams, "Gist is already archived");
             }
 
-            const response = await context.axiosInstance.patch(`/gists/${gistId}`, {
+            const response = await context.axiosInstance.patch(`/${id}`, {
                 description: `${gist.description || ""} [Archived]`.trim(),
             });
 
-            context.updateGistInCache(response.data);
+            context.gistStore.update(response.data);
 
             return {
                 id: response.data.id,
@@ -98,15 +97,14 @@ export const archiveHandlers: ToolModule = {
             };
         },
 
-        unarchive_gist: async (request, context) => {
-            const gistId = String(request.params.arguments?.id);
-            const gists = await context.fetchAllGists();
-            const gist = gists.find((g) => g.id === gistId);
+        unarchive_gist: async ({ id }, context) => {
+            const gists = await context.gistStore.getAll();
+            const gist = gists.find((g: Gist) => g.id === id);
 
             if (!gist) {
                 throw new McpError(
                     ErrorCode.InvalidParams,
-                    `Gist with ID '${gistId}' not found`
+                    `Gist with ID '${id}' not found`
                 );
             }
 
@@ -115,11 +113,11 @@ export const archiveHandlers: ToolModule = {
             }
 
             const newDescription = gist.description.replace(/ \[Archived\]$/, "");
-            const response = await context.axiosInstance.patch(`/gists/${gistId}`, {
+            const response = await context.axiosInstance.patch(`/${id}`, {
                 description: newDescription,
             });
 
-            context.updateGistInCache(response.data);
+            context.gistStore.update(response.data);
 
             return {
                 id: response.data.id,

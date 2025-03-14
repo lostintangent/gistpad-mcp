@@ -53,28 +53,37 @@ export const commentHandlers: ToolModule = {
                 required: ["gist_id", "comment_id"],
             },
         },
+        {
+            name: "edit_gist_comment",
+            description: "Update the content of an existing gist comment",
+            inputSchema: {
+                type: "object",
+                properties: {
+                    gist_id: {
+                        type: "string",
+                        description: "The ID of the gist",
+                    },
+                    comment_id: {
+                        type: "string",
+                        description: "The ID of the comment to edit",
+                    },
+                    body: {
+                        type: "string",
+                        description: "The new comment text",
+                    },
+                },
+                required: ["gist_id", "comment_id", "body"],
+            },
+        },
     ],
 
     handlers: {
-        list_gist_comments: async (request, context) => {
-            const gistId = String(request.params.arguments?.id);
-            const gists = await context.fetchAllGists();
-            const gist = gists.find((g) => g.id === gistId);
-
-            if (!gist) {
-                throw new McpError(
-                    ErrorCode.InvalidParams,
-                    `Gist with ID '${gistId}' not found`
-                );
-            }
-
-            const response = await context.axiosInstance.get(
-                `/gists/${gistId}/comments`
-            );
+        list_gist_comments: async ({ id }, context) => {
+            const response = await context.axiosInstance.get(`/${id}/comments`);
             const comments = response.data as GistComment[];
 
             return {
-                gist_id: gistId,
+                gist_id: id,
                 count: comments.length,
                 comments: comments.map((comment) => ({
                     id: comment.id,
@@ -86,71 +95,51 @@ export const commentHandlers: ToolModule = {
             };
         },
 
-        add_gist_comment: async (request, context) => {
-            const args = request.params.arguments as
-                | { id?: string; body?: string }
-                | undefined;
-            const gistId = String(args?.id);
-            const body = args?.body;
-
-            if (!body?.trim()) {
+        add_gist_comment: async ({ id, body }, context) => {
+            if (!body) {
                 throw new McpError(
                     ErrorCode.InvalidParams,
                     "Comment body is required and cannot be empty"
                 );
             }
 
-            const gists = await context.fetchAllGists();
-            const gist = gists.find((g) => g.id === gistId);
-
-            if (!gist) {
-                throw new McpError(
-                    ErrorCode.InvalidParams,
-                    `Gist with ID '${gistId}' not found`
-                );
-            }
-
-            const response = await context.axiosInstance.post(
-                `/gists/${gistId}/comments`,
-                {
-                    body: body.trim(),
-                }
-            );
-
-            const comment = response.data as GistComment;
+            const response = await context.axiosInstance.post(`/${id}/comments`, {
+                body,
+            });
 
             return {
-                gist_id: gistId,
-                comment_id: comment.id,
+                gist_id: id,
+                comment_id: response.data.id,
                 message: "Comment added successfully",
             };
         },
 
-        delete_gist_comment: async (request, context) => {
-            const args = request.params.arguments as
-                | { gist_id?: string; comment_id?: string }
-                | undefined;
-            const gistId = String(args?.gist_id);
-            const commentId = String(args?.comment_id);
+        delete_gist_comment: async ({ gist_id, comment_id }, context) => {
+            await context.axiosInstance.delete(`/${gist_id}/comments/${comment_id}`);
 
-            const gists = await context.fetchAllGists();
-            const gist = gists.find((g) => g.id === gistId);
+            return {
+                gist_id,
+                comment_id,
+                message: "Comment deleted successfully",
+            };
+        },
 
-            if (!gist) {
+        edit_gist_comment: async ({ gist_id, comment_id, body }, context) => {
+            if (!body) {
                 throw new McpError(
                     ErrorCode.InvalidParams,
-                    `Gist with ID '${gistId}' not found`
+                    "Comment body is required and cannot be empty"
                 );
             }
 
-            await context.axiosInstance.delete(
-                `/gists/${gistId}/comments/${commentId}`
-            );
+            await context.axiosInstance.patch(`/${gist_id}/comments/${comment_id}`, {
+                body,
+            });
 
             return {
-                gist_id: gistId,
-                comment_id: commentId,
-                message: "Comment deleted successfully",
+                gist_id,
+                comment_id,
+                message: "Comment updated successfully",
             };
         },
     },

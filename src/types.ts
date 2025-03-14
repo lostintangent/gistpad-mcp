@@ -1,3 +1,5 @@
+import { GistStore } from "./store.js";
+
 // GitHub Gist API types
 
 export interface GistComment {
@@ -32,31 +34,16 @@ export interface Gist {
 
 // MCP / GistPad server types
 
-export interface HandlerContext {
-    fetchAllGists: () => Promise<Gist[]>;
-    fetchStarredGists: () => Promise<Gist[]>;
+export interface RequestContext {
+    gistStore: GistStore;
+    starredGistStore: GistStore;
     dailyNotesGistId: string | null;
-
-    updateGistInCache: (gist: Gist) => void;
-    addGistToCache: (gist: Gist) => void;
-    removeGistFromCache: (gistId: string) => void;
-
     axiosInstance: any;
-
-    addStarredGist: (gist: Gist) => void;
-    removeStarredGist: (gistId: string) => void;
-}
-
-export interface RequestWithParams {
-    params: {
-        name: string;
-        arguments?: Record<string, unknown>;
-    };
 }
 
 export type ToolHandler = (
-    request: RequestWithParams,
-    context: HandlerContext
+    args: Record<string, unknown>,
+    context: RequestContext
 ) => Promise<any>;
 
 export type ToolDefinition = {
@@ -75,7 +62,7 @@ export interface ToolModule {
 }
 
 export interface ResourceHandlers {
-    listResources: (context: HandlerContext) => Promise<{
+    listResources: (context: RequestContext) => Promise<{
         resources: Array<{
             uri: string;
             name: string;
@@ -85,7 +72,7 @@ export interface ResourceHandlers {
 
     readResource: (
         uri: string,
-        context: HandlerContext
+        context: RequestContext
     ) => Promise<{
         contents: Array<{
             uri: string;

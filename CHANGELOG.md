@@ -1,3 +1,7 @@
+## 📆 v0.2.2 (03/14/2025)
+
+- Added the `edit_gist_comment` tool, which allows updating the content of existing gist comments
+
 ## 📆 v0.2.1 (03/13/2025)
 
 - Introduced the `update_todays_note` tool, which allows updating the contents of the daily note

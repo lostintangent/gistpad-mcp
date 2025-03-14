@@ -1,5 +1,5 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { Gist, HandlerContext, ToolModule } from "../types.js";
+import { Gist, RequestContext, ToolModule } from "../types.js";
 
 function getTodaysFilename(): string {
     const today = new Date();
@@ -10,11 +10,11 @@ function getTodaysFilename(): string {
 }
 
 async function createDailyNotesGist(
-    context: HandlerContext,
+    context: RequestContext,
     filename: string
 ): Promise<Gist> {
     const content = `# ${filename.replace(".md", "")}\n`;
-    const response = await context.axiosInstance.post("/gists", {
+    const response = await context.axiosInstance.post("", {
         description: "📆 Daily notes",
         public: false,
         files: {
@@ -24,19 +24,19 @@ async function createDailyNotesGist(
         },
     });
 
-    context.addGistToCache(response.data);
+    context.gistStore.add(response.data);
     context.dailyNotesGistId = response.data.id;
 
     return response.data;
 }
 
 async function createTodaysNote(
-    context: HandlerContext,
+    context: RequestContext,
     filename: string
 ): Promise<Gist> {
     const content = `# ${filename.replace(".md", "")}\n`;
     const response = await context.axiosInstance.patch(
-        `/gists/${context.dailyNotesGistId}`,
+        `/${context.dailyNotesGistId}`,
         {
             files: {
                 [filename]: {
@@ -46,7 +46,7 @@ async function createTodaysNote(
         }
     );
 
-    context.updateGistInCache(response.data);
+    context.gistStore.update(response.data);
     return response.data;
 }
 
@@ -94,7 +94,8 @@ export const dailyHandlers: ToolModule = {
                 properties: {
                     date: {
                         type: "string",
-                        description: "Date of the daily note to delete, in the following format: MM-DD-YYYY (e.g. 03-10-2025)",
+                        description:
+                            "Date of the daily note to delete, in the following format: MM-DD-YYYY (e.g. 03-10-2025)",
                     },
                 },
                 required: ["date"],
@@ -102,22 +103,23 @@ export const dailyHandlers: ToolModule = {
         },
         {
             name: "update_todays_note",
-            description: "Update the existing content of today's daily note",
+            description:
+                "Update the existing content of today's daily note, which is useful for tracking todos, tasks, scratch notes, etc.",
             inputSchema: {
                 type: "object",
                 properties: {
                     content: {
                         type: "string",
-                        description: "The updated content for today's daily note"
-                    }
+                        description: "The updated content for today's daily note",
+                    },
                 },
-                required: ["content"]
-            }
-        }
+                required: ["content"],
+            },
+        },
     ],
 
     handlers: {
-        update_todays_note: async (request, context) => {
+        update_todays_note: async ({ content }, context) => {
             // Note that we don't need to attempt to create
             // the gist or note for today, because in order
             // for the MCP client to call this method, it
@@ -126,27 +128,26 @@ export const dailyHandlers: ToolModule = {
             // already exist.
 
             const filename = getTodaysFilename();
-            const gists = await context.fetchAllGists();
+            const gists = await context.gistStore.getAll();
 
-            const args = request.params.arguments as { content: string };
             const response = await context.axiosInstance.patch(
-                `/gists/${context.dailyNotesGistId}`,
+                `/${context.dailyNotesGistId}`,
                 {
                     files: {
                         [filename]: {
-                            content: args.content
-                        }
-                    }
+                            content,
+                        },
+                    },
                 }
             );
 
-            context.updateGistInCache(response.data);
+            context.gistStore.update(response.data);
             return "Successfully updated today's note";
         },
 
-        get_todays_note: async (request, context) => {
+        get_todays_note: async (args, context) => {
             const filename = getTodaysFilename();
-            const gists = await context.fetchAllGists();
+            const gists = await context.gistStore.getAll();
 
             let dailyNotesGist: Gist | undefined;
             if (!context.dailyNotesGistId) {
@@ -164,10 +165,10 @@ export const dailyHandlers: ToolModule = {
                     if (!contents) {
                         // Fetch the daily gist by ID
                         const response = await context.axiosInstance.get(
-                            `/gists/${context.dailyNotesGistId}`
+                            `/${context.dailyNotesGistId}`
                         );
                         dailyNotesGist = response.data;
-                        context.updateGistInCache(dailyNotesGist!);
+                        context.gistStore.update(dailyNotesGist!);
                     }
                 }
             }
@@ -175,8 +176,8 @@ export const dailyHandlers: ToolModule = {
             return dailyNotesGist!.files[filename].content;
         },
 
-        list_daily_notes: async (request, context) => {
-            const gists = await context.fetchAllGists();
+        list_daily_notes: async (args, context) => {
+            const gists = await context.gistStore.getAll();
 
             // The user doesn't have an active daily notes gist
             // so just return an empty list, without creating one.
@@ -199,17 +200,12 @@ export const dailyHandlers: ToolModule = {
             };
         },
 
-        get_daily_note: async (request, context) => {
-            const args = request.params.arguments as
-                | { filename?: string }
-                | undefined;
-            const filename = args?.filename;
-
-            if (!filename) {
-                throw new McpError(ErrorCode.InvalidParams, "Filename is required");
+        get_daily_note: async ({ date }, context) => {
+            if (!date) {
+                throw new McpError(ErrorCode.InvalidParams, "Date is required");
             }
 
-            const gists = await context.fetchAllGists();
+            const gists = await context.gistStore.getAll();
 
             // Check after fetch since fetchAllGists updates the context
             if (!context.dailyNotesGistId) {
@@ -223,7 +219,7 @@ export const dailyHandlers: ToolModule = {
                 (gist) => gist.id === context.dailyNotesGistId
             )!;
 
-            const file = dailyNotesGist.files[filename];
+            const file = dailyNotesGist.files[`${date}.md`];
             if (!file) {
                 throw new McpError(
                     ErrorCode.InvalidRequest,
@@ -234,16 +230,13 @@ export const dailyHandlers: ToolModule = {
             return file.content;
         },
 
-        delete_daily_note: async (request, context) => {
-            const args = request.params.arguments as { date?: string } | undefined;
-            const date = args?.date;
-
+        delete_daily_note: async ({ date }, context) => {
             if (!date) {
                 throw new McpError(ErrorCode.InvalidParams, "Date is required");
             }
 
             const filename = `${date}.md`;
-            const gists = await context.fetchAllGists();
+            const gists = await context.gistStore.getAll();
 
             if (!context.dailyNotesGistId) {
                 throw new McpError(
@@ -264,7 +257,7 @@ export const dailyHandlers: ToolModule = {
             }
 
             const response = await context.axiosInstance.patch(
-                `/gists/${context.dailyNotesGistId}`,
+                `/${context.dailyNotesGistId}`,
                 {
                     files: {
                         [filename]: null,
@@ -272,8 +265,7 @@ export const dailyHandlers: ToolModule = {
                 }
             );
 
-            context.updateGistInCache(response.data);
-
+            context.gistStore.update(response.data);
             return `Successfully deleted daily note for ${date}`;
         },
     },

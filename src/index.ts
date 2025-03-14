@@ -12,6 +12,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import axios from "axios";
 import { resourceHandlers } from "./resources/gists.js";
+import { GistStore } from "./store.js";
 import {
   archiveHandlers,
   basicHandlers,
@@ -20,7 +21,7 @@ import {
   fileHandlers,
   starHandlers,
 } from "./tools/index.js";
-import { Gist, HandlerContext } from "./types.js";
+import { Gist, RequestContext } from "./types.js";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 if (!GITHUB_TOKEN) {
@@ -31,37 +32,34 @@ class GistpadServer {
   private server: Server;
   private axiosInstance;
 
-  private gists: Gist[] | null = null;
-  private starredGists: Gist[] | null = null;
+  private gistStore: GistStore;
+  private starredGistStore: GistStore;
   private dailyNotesGistId: string | null = null;
-
-  // Gist cache utilties
 
   private filterGists(gists: Gist[]): Gist[] {
     return gists.filter((gist: Gist) => {
       const files = Object.entries(gist.files);
-      return files.every(([_, file]) => file.language === "Markdown" || file.filename.endsWith(".tldraw"));
+      return files.every(
+        ([_, file]) =>
+          file.language === "Markdown" || file.filename.endsWith(".tldraw")
+      );
     });
   }
 
   private async fetchAllGists(): Promise<Gist[]> {
-    if (this.gists !== null) {
-      return this.gists;
-    }
-
     const allGists: Gist[] = [];
     let page = 1;
     const perPage = 100;
 
     while (true) {
-      const response = await this.axiosInstance.get<Gist[]>("/gists", {
+      const response = await this.axiosInstance.get<Gist[]>("", {
         params: {
           per_page: perPage,
           page: page,
         },
       });
 
-      const gists = response.data
+      const gists = response.data;
       const filteredGists = this.filterGists(gists);
       allGists.push(...filteredGists);
 
@@ -72,9 +70,7 @@ class GistpadServer {
       page++;
     }
 
-    this.gists = allGists;
-
-    const dailyNotesGist = this.gists.find(
+    const dailyNotesGist = allGists.find(
       (gist) => gist.description === "📆 Daily notes"
     );
 
@@ -85,68 +81,23 @@ class GistpadServer {
     return allGists;
   }
 
-  private addGistToCache(gist: Gist) {
-    if (this.gists) {
-      if (!this.gists.some(g => g.id === gist.id)) {
-        this.gists.push(gist);
-        this.server.sendResourceListChanged();
-      }
-    }
-  }
-
-  private removeGistFromCache(gistId: string) {
-    if (this.gists) {
-      this.gists = this.gists.filter(g => g.id !== gistId);
-      this.server.sendResourceListChanged();
-    }
-  }
-
-  private updateGistInCache(gist: Gist) {
-    if (this.gists) {
-      const index = this.gists.findIndex((g) => g.id === gist.id);
-      if (index !== -1) {
-        const oldGist = this.gists[index];
-        this.gists[index] = gist;
-        // Only notify if the description changed since that affects the resource list
-        if (oldGist.description !== gist.description) {
-          this.server.sendResourceListChanged();
-        }
-      }
-    }
-  }
-
-  // Starred gist cache utilties
-
   private async fetchStarredGists(): Promise<Gist[]> {
-    if (this.starredGists !== null) {
-      return this.starredGists;
-    }
-
-    const response = await this.axiosInstance.get<Gist[]>("/gists/starred");
-    this.starredGists = this.filterGists(response.data);
-
-    return this.starredGists;
-  }
-
-  private addStarredGist(gist: Gist) {
-    if (this.starredGists) {
-      if (!this.starredGists.some(g => g.id === gist.id)) {
-        this.starredGists.push(gist);
-      }
-    }
-  }
-
-  private removeStarredGist(gistId: string) {
-    if (this.starredGists) {
-      this.starredGists = this.starredGists.filter(g => g.id !== gistId);
-    }
+    const response = await this.axiosInstance.get<Gist[]>("/starred");
+    return this.filterGists(response.data);
   }
 
   constructor() {
+    this.gistStore = new GistStore(
+      () => this.fetchAllGists(),
+      () => this.server.sendResourceListChanged()
+    );
+
+    this.starredGistStore = new GistStore(() => this.fetchStarredGists());
+
     this.server = new Server(
       {
         name: "gistpad",
-        version: "0.2.1",
+        version: "0.2.2",
       },
       {
         capabilities: {
@@ -167,7 +118,7 @@ class GistpadServer {
     );
 
     this.axiosInstance = axios.create({
-      baseURL: "https://api.github.com",
+      baseURL: "https://api.github.com/gists",
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
         Accept: "application/vnd.github.v3+json",
@@ -183,20 +134,12 @@ class GistpadServer {
     });
   }
 
-  private createGistContext(): HandlerContext {
+  private createGistContext(): RequestContext {
     return {
-      fetchAllGists: () => this.fetchAllGists(),
-      fetchStarredGists: () => this.fetchStarredGists(),
-
-      axiosInstance: this.axiosInstance,
+      gistStore: this.gistStore,
+      starredGistStore: this.starredGistStore,
       dailyNotesGistId: this.dailyNotesGistId,
-
-      addGistToCache: (gist) => this.addGistToCache(gist),
-      removeGistFromCache: (gistId) => this.removeGistFromCache(gistId),
-      updateGistInCache: (gist) => this.updateGistInCache(gist),
-
-      addStarredGist: (gist) => this.addStarredGist(gist),
-      removeStarredGist: (gistId) => this.removeStarredGist(gistId),
+      axiosInstance: this.axiosInstance,
     };
   }
 
@@ -208,24 +151,24 @@ class GistpadServer {
 
     this.server.setRequestHandler(
       ReadResourceRequestSchema,
-      async (request) => {
+      async ({ params: { uri } }) => {
         const context = this.createGistContext();
-        return resourceHandlers.readResource(request.params.uri, context);
+        return resourceHandlers.readResource(uri, context);
       }
     );
   }
 
   private setupToolHandlers() {
-    const tools = [
-      ...basicHandlers.tools,
-      ...fileHandlers.tools,
-      ...starHandlers.tools,
-      ...archiveHandlers.tools,
-      ...dailyHandlers.tools,
-      ...commentHandlers.tools,
-    ];
-
-    this.server.setRequestHandler(ListToolsRequestSchema, () => ({ tools }));
+    this.server.setRequestHandler(ListToolsRequestSchema, () => ({
+      tools: [
+        ...basicHandlers.tools,
+        ...fileHandlers.tools,
+        ...starHandlers.tools,
+        ...archiveHandlers.tools,
+        ...dailyHandlers.tools,
+        ...commentHandlers.tools,
+      ]
+    }));
 
     const toolHandlers = {
       ...basicHandlers.handlers,
@@ -247,7 +190,7 @@ class GistpadServer {
         }
 
         const context = this.createGistContext();
-        const result = await handler(request, context);
+        const result = await handler(request.params.arguments || {}, context);
 
         return {
           content: [
@@ -275,6 +218,9 @@ class GistpadServer {
 
 const server = new GistpadServer();
 server.run().catch((error) => {
-  console.error("An error occurred while running the GistPad MCP server:", error);
+  console.error(
+    "An error occurred while running the GistPad MCP server:",
+    error
+  );
   process.exit(1);
 });

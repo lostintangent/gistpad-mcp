@@ -1,4 +1,4 @@
-import { ToolModule } from "../types.js";
+import { Gist, ToolModule } from "../types.js";
 
 export const starHandlers: ToolModule = {
     tools: [
@@ -42,8 +42,8 @@ export const starHandlers: ToolModule = {
     ],
 
     handlers: {
-        list_starred_gists: async (request, context) => {
-            const starredGists = await context.fetchStarredGists();
+        list_starred_gists: async (args, context) => {
+            const starredGists = await context.starredGistStore.getAll();
 
             return {
                 count: starredGists.length,
@@ -59,19 +59,19 @@ export const starHandlers: ToolModule = {
             };
         },
 
-        star_gist: async (request, context) => {
-            const gistId = String(request.params.arguments?.id);
+        star_gist: async (args, context) => {
+            const gistId = String(args.id);
 
-            await context.axiosInstance.put(`/gists/${gistId}/star`);
+            await context.axiosInstance.put(`/${gistId}/star`);
 
-            const gists = await context.fetchAllGists();
-            let gist = gists.find((g) => g.id === gistId);
+            const gists = await context.gistStore.getAll();
+            let gist = gists.find((g: Gist) => g.id === gistId);
             if (!gist) {
-                const response = await context.axiosInstance.get(`/gists/${gistId}`);
+                const response = await context.axiosInstance.get(`/${gistId}`);
                 gist = response.data;
             }
 
-            context.addStarredGist(gist!);
+            context.starredGistStore.add(gist!);
 
             return {
                 id: gist!.id,
@@ -80,14 +80,14 @@ export const starHandlers: ToolModule = {
             };
         },
 
-        unstar_gist: async (request, context) => {
-            const gistId = String(request.params.arguments?.id);
+        unstar_gist: async (args, context) => {
+            const gistId = String(args.id);
 
-            const gists = await context.fetchStarredGists();
-            let gist = gists.find((g) => g.id === gistId)!;
+            const gists = await context.starredGistStore.getAll();
+            let gist = gists.find((g: Gist) => g.id === gistId)!;
 
-            await context.axiosInstance.delete(`/gists/${gistId}/star`);
-            context.removeStarredGist(gistId);
+            await context.axiosInstance.delete(`/${gistId}/star`);
+            context.starredGistStore.remove(gistId);
 
             return {
                 id: gist.id,
