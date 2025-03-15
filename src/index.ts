@@ -47,7 +47,7 @@ class GistpadServer {
     this.server = new Server(
       {
         name: "gistpad",
-        version: "0.2.2",
+        version: "0.2.3",
       },
       {
         capabilities: {
@@ -88,6 +88,7 @@ class GistpadServer {
       gistStore: this.gistStore,
       starredGistStore: this.starredGistStore,
       axiosInstance: this.axiosInstance,
+      showArchived: process.argv.includes("--archived"),
     };
   }
 

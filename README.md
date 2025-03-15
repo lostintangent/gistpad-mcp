@@ -28,6 +28,8 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
    }
    ```
 
+   > Note: Optionally, you can also pass the `--archived` flag in the `args` array, which will expose your archived gists as resources as well. By default, archived gists are filtered out (but can be accessed through tools).
+
 1. Restart your MCP client _(optionally, depending on the tool)_
 
 1. :partying_face: Start having fun with gists + MCP! For example, try things like...

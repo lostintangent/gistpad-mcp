@@ -38,6 +38,7 @@ export interface RequestContext {
     gistStore: YourGistStore;
     starredGistStore: StarredGistStore;
     axiosInstance: any;
+    showArchived: boolean;
 }
 
 export type ToolHandler = (

@@ -5,8 +5,7 @@ export const resourceHandlers: ResourceHandlers = {
         const gists = await context.gistStore.getAll();
         return {
             resources: gists
-                // Exclude archived gists, since they're not expected to be used often.
-                .filter((gist) => !gist.description?.endsWith(" [Archived]"))
+                .filter((gist) => context.showArchived || !gist.description?.endsWith(" [Archived]"))
                 .map((gist) => ({
                     uri: `gist:///${gist.id}`,
                     name:

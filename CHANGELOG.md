@@ -1,3 +1,7 @@
+## 📆 v0.2.3 (03/15/2025)
+
+- Added support for `--archived` CLI flag to optionally include archived gists in the resources list
+
 ## 📆 v0.2.2 (03/14/2025)
 
 - Added the `edit_gist_comment` tool, which allows updating the content of existing gist comments
