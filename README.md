@@ -98,7 +98,7 @@ When you add/delete/duplicate a gist, or change a gist's description, then a not
 
 ### Additional resources
 
-If you'd like to expose either your archived gists and/or starred gists as resources, then simply update your MCP server configu to pass the `--archived` and/or `--starred` flags to the `gistpad-mcp` CLU.
+If you'd like to expose either your archived gists and/or starred gists as resources, then simply update your MCP server configurstion, in order to pass the `--archived` and/or `--starred` flags to the `gistpad-mcp` CLI.
 
 <ins>Unsupported/future enhancements:</ins>
 
