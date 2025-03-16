@@ -2,7 +2,16 @@ import { Gist, ResourceHandlers } from "../types.js";
 
 export const resourceHandlers: ResourceHandlers = {
     listResources: async (context) => {
-        const gists = await context.gistStore.getAll();
+        let gists = await context.gistStore.getAll();
+
+        if (context.showStarred) {
+            const starredGists = await context.starredGistStore.getAll();
+            const markedStarredGists = starredGists.map(gist => ({
+                ...gist,
+                description: (gist.description || "") + " [Starred]"
+            }));
+            gists = [...gists, ...markedStarredGists];
+        }
         return {
             resources: gists
                 .filter((gist) => context.showArchived || !gist.description?.endsWith(" [Archived]"))

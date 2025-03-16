@@ -47,7 +47,7 @@ class GistpadServer {
     this.server = new Server(
       {
         name: "gistpad",
-        version: "0.2.3",
+        version: "0.2.4",
       },
       {
         capabilities: {
@@ -69,10 +69,14 @@ class GistpadServer {
 
     this.gistStore = new YourGistStore(
       this.axiosInstance,
-      () => this.server.sendResourceListChanged()
+      this.server
     );
 
-    this.starredGistStore = new StarredGistStore(this.axiosInstance);
+    this.starredGistStore = new StarredGistStore(
+      this.axiosInstance,
+      this.server,
+      process.argv.includes("--starred")
+    );
 
     this.setupResourceHandlers();
     this.setupToolHandlers();
@@ -89,6 +93,7 @@ class GistpadServer {
       starredGistStore: this.starredGistStore,
       axiosInstance: this.axiosInstance,
       showArchived: process.argv.includes("--archived"),
+      showStarred: process.argv.includes("--starred"),
     };
   }
 

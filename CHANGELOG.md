@@ -1,3 +1,7 @@
+## 📆 v0.2.4 (03/15/2025)
+
+- Added support for `--starred` CLI flag to optionally include starred gists in the resources list, with notifications when gists are starred/unstarred
+
 ## 📆 v0.2.3 (03/15/2025)
 
 - Added support for `--archived` CLI flag to optionally include archived gists in the resources list

@@ -13,8 +13,19 @@ function filterGists(gists: Gist[]): Gist[] {
 export abstract class GistStore {
     private cache: Gist[] | null = null;
 
+    constructor(
+        protected axiosInstance: { get<T>(url: string, config?: any): Promise<{ data: T }> },
+        private server: { sendResourceListChanged(): void },
+        private triggerNotifications: boolean = true
+    ) { }
+
     protected abstract fetchData(): Promise<Gist[]>;
-    protected abstract notifyChange(): void;
+
+    private notifyResourceListChanged(): void {
+        if (this.triggerNotifications) {
+            this.server.sendResourceListChanged();
+        }
+    }
 
     async getAll(): Promise<Gist[]> {
         if (this.cache === null) {
@@ -26,14 +37,14 @@ export abstract class GistStore {
     add(gist: Gist): void {
         if (this.cache && !this.cache.some(g => g.id === gist.id)) {
             this.cache.push(gist);
-            this.notifyChange();
+            this.notifyResourceListChanged();
         }
     }
 
     remove(gistId: string): void {
         if (this.cache) {
             this.cache = this.cache.filter(g => g.id !== gistId);
-            this.notifyChange();
+            this.notifyResourceListChanged();
         }
     }
 
@@ -44,7 +55,7 @@ export abstract class GistStore {
                 const oldGist = this.cache[index];
                 this.cache[index] = gist;
                 if (oldGist.description !== gist.description) {
-                    this.notifyChange();
+                    this.notifyResourceListChanged();
                 }
             }
         }
@@ -56,17 +67,7 @@ export abstract class GistStore {
 }
 
 export class YourGistStore extends GistStore {
-    private axiosInstance: {
-        get<T>(url: string, config?: any): Promise<{ data: T }>
-    };
-    private sendResourceListChanged: () => void;
     private dailyNotesGistId: string | null = null;
-
-    constructor(axiosInstance: { get<T>(url: string, config?: any): Promise<{ data: T }> }, sendResourceListChanged: () => void) {
-        super();
-        this.axiosInstance = axiosInstance;
-        this.sendResourceListChanged = sendResourceListChanged;
-    }
 
     async getDailyNotes(): Promise<Gist | null> {
         const gists = await this.fetchData();
@@ -119,28 +120,11 @@ export class YourGistStore extends GistStore {
 
         return allGists;
     }
-
-    protected notifyChange(): void {
-        this.sendResourceListChanged();
-    }
 }
 
 export class StarredGistStore extends GistStore {
-    private axiosInstance: {
-        get<T>(url: string, config?: any): Promise<{ data: T }>
-    };
-
-    constructor(axiosInstance: { get<T>(url: string, config?: any): Promise<{ data: T }> }) {
-        super();
-        this.axiosInstance = axiosInstance;
-    }
-
     protected async fetchData(): Promise<Gist[]> {
         const response = await this.axiosInstance.get<Gist[]>("/starred");
         return filterGists(response.data);
-    }
-
-    protected notifyChange(): void {
-        // Starred gists don't need to notify changes
     }
 }

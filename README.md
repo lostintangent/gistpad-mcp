@@ -28,8 +28,6 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
    }
    ```
 
-   > Note: Optionally, you can also pass the `--archived` flag in the `args` array, which will expose your archived gists as resources as well. By default, archived gists are filtered out (but can be accessed through tools).
-
 1. Restart your MCP client _(optionally, depending on the tool)_
 
 1. :partying_face: Start having fun with gists + MCP! For example, try things like...
@@ -98,7 +96,10 @@ In addition to the above tools, the GistPad MCP server also exposes your gists a
 
 When you add/delete/duplicate a gist, or change a gist's description, then a notification will be provided to MCP clients, indicating that the list of resources have changed.
 
+### Additional resources
+
+If you'd like to expose either your archived gists and/or starred gists as resources, then simply update your MCP server configu to pass the `--archived` and/or `--starred` flags to the `gistpad-mcp` CLU.
+
 <ins>Unsupported/future enhancements:</ins>
 
-- Exposing archived/starred gists as resources
 - Allowing clients to subscribe to updates for specific gists
