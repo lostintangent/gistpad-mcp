@@ -1,5 +1,16 @@
 import { StarredGistStore, YourGistStore } from "./store.js";
 
+// Utility functions
+
+export const isArchivedGist = (gist: Gist): boolean => {
+    return gist.description?.endsWith(" [Archived]") ?? false;
+};
+
+export const DAILY_NOTES_DESCRIPTION = "📆 Daily notes";
+export const isDailyNoteGist = (gist: Gist): boolean => {
+    return gist.description === DAILY_NOTES_DESCRIPTION;
+};
+
 // GitHub Gist API types
 
 export interface GistComment {
@@ -40,6 +51,7 @@ export interface RequestContext {
     axiosInstance: any;
     showArchived: boolean;
     showStarred: boolean;
+    showDaily: boolean;
 }
 
 export type ToolHandler = (
@@ -70,6 +82,15 @@ export interface ResourceHandlers {
             mimeType: "application/json";
         }>;
     }>;
+
+    listResourceTemplates: () => {
+        resourceTemplates: Array<{
+            uriTemplate: string;
+            name: string;
+            mimeType: string;
+            description?: string;
+        }>;
+    };
 
     readResource: (
         uri: string,

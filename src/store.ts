@@ -1,4 +1,4 @@
-import { Gist } from "./types.js";
+import { Gist, isDailyNoteGist } from "./types.js";
 
 function filterGists(gists: Gist[]): Gist[] {
     return gists.filter((gist: Gist) => {
@@ -14,7 +14,9 @@ export abstract class GistStore {
     private cache: Gist[] | null = null;
 
     constructor(
-        protected axiosInstance: { get<T>(url: string, config?: any): Promise<{ data: T }> },
+        protected axiosInstance: {
+            get<T>(url: string, config?: any): Promise<{ data: T }>;
+        },
         private server: { sendResourceListChanged(): void },
         private triggerNotifications: boolean = true
     ) { }
@@ -35,7 +37,7 @@ export abstract class GistStore {
     }
 
     add(gist: Gist): void {
-        if (this.cache && !this.cache.some(g => g.id === gist.id)) {
+        if (this.cache && !this.cache.some((g) => g.id === gist.id)) {
             this.cache.push(gist);
             this.notifyResourceListChanged();
         }
@@ -43,14 +45,14 @@ export abstract class GistStore {
 
     remove(gistId: string): void {
         if (this.cache) {
-            this.cache = this.cache.filter(g => g.id !== gistId);
+            this.cache = this.cache.filter((g) => g.id !== gistId);
             this.notifyResourceListChanged();
         }
     }
 
     update(gist: Gist) {
         if (this.cache) {
-            const index = this.cache.findIndex(g => g.id === gist.id);
+            const index = this.cache.findIndex((g) => g.id === gist.id);
             if (index !== -1) {
                 const oldGist = this.cache[index];
                 this.cache[index] = gist;
@@ -72,7 +74,7 @@ export class YourGistStore extends GistStore {
     async getDailyNotes(): Promise<Gist | null> {
         const gists = await this.fetchData();
         if (this.dailyNotesGistId) {
-            const gist = gists.find(gist => gist.id === this.dailyNotesGistId);
+            const gist = gists.find((gist) => gist.id === this.dailyNotesGistId);
             if (gist) {
                 return gist;
             }
@@ -110,10 +112,7 @@ export class YourGistStore extends GistStore {
             page++;
         }
 
-        const dailyNotesGist = allGists.find(
-            (gist) => gist.description === "📆 Daily notes"
-        );
-
+        const dailyNotesGist = allGists.find(isDailyNoteGist);
         if (dailyNotesGist) {
             this.dailyNotesGistId = dailyNotesGist.id;
         }

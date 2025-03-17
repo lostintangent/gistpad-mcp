@@ -1,12 +1,11 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { Gist, ToolModule } from "../types.js";
+import { Gist, ToolModule, isArchivedGist, isDailyNoteGist } from "../types.js";
 
 export const archiveHandlers: ToolModule = {
     tools: [
         {
             name: "list_archived_gists",
-            description:
-                "List all of your archived gists",
+            description: "List all of your archived gists",
             inputSchema: {
                 type: "object",
                 properties: {},
@@ -29,8 +28,7 @@ export const archiveHandlers: ToolModule = {
         },
         {
             name: "unarchive_gist",
-            description:
-                "Unarchive a gist",
+            description: "Unarchive a gist",
             inputSchema: {
                 type: "object",
                 properties: {
@@ -47,9 +45,7 @@ export const archiveHandlers: ToolModule = {
     handlers: {
         list_archived_gists: async (args, context) => {
             const gists = await context.gistStore.getAll();
-            const archivedGists = gists.filter((gist: Gist) =>
-                gist.description?.endsWith(" [Archived]")
-            );
+            const archivedGists = gists.filter(isArchivedGist);
             return {
                 count: archivedGists.length,
                 gists: archivedGists.map((gist) => ({
@@ -73,14 +69,14 @@ export const archiveHandlers: ToolModule = {
                 );
             }
 
-            if (gist.description === "📆 Daily notes") {
+            if (isDailyNoteGist(gist)) {
                 throw new McpError(
                     ErrorCode.InvalidParams,
                     "Cannot archive daily notes"
                 );
             }
 
-            if (gist.description?.endsWith(" [Archived]")) {
+            if (isArchivedGist(gist)) {
                 throw new McpError(ErrorCode.InvalidParams, "Gist is already archived");
             }
 
@@ -108,7 +104,7 @@ export const archiveHandlers: ToolModule = {
                 );
             }
 
-            if (!gist.description?.endsWith(" [Archived]")) {
+            if (!isArchivedGist(gist)) {
                 throw new McpError(ErrorCode.InvalidParams, "Gist is not archived");
             }
 

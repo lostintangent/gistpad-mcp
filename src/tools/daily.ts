@@ -1,5 +1,10 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { Gist, RequestContext, ToolModule } from "../types.js";
+import {
+    DAILY_NOTES_DESCRIPTION,
+    Gist,
+    RequestContext,
+    ToolModule,
+} from "../types.js";
 
 function getTodaysFilename(): string {
     const today = new Date();
@@ -15,7 +20,7 @@ async function createDailyNotesGist(
 ): Promise<Gist> {
     const content = `# ${filename.replace(".md", "")}\n`;
     const response = await context.axiosInstance.post("", {
-        description: "📆 Daily notes",
+        description: DAILY_NOTES_DESCRIPTION,
         public: false,
         files: {
             [filename]: {
@@ -35,16 +40,13 @@ async function createTodaysNote(
     filename: string
 ): Promise<Gist> {
     const content = `# ${filename.replace(".md", "")}\n`;
-    const response = await context.axiosInstance.patch(
-        `/${dailyNotes.id}`,
-        {
-            files: {
-                [filename]: {
-                    content,
-                },
+    const response = await context.axiosInstance.patch(`/${dailyNotes.id}`, {
+        files: {
+            [filename]: {
+                content,
             },
-        }
-    );
+        },
+    });
 
     context.gistStore.update(response.data);
     return response.data;
@@ -130,16 +132,13 @@ export const dailyHandlers: ToolModule = {
             const filename = getTodaysFilename();
             const dailyNotes = await context.gistStore.getDailyNotes();
 
-            const response = await context.axiosInstance.patch(
-                `/${dailyNotes!.id}`,
-                {
-                    files: {
-                        [filename]: {
-                            content,
-                        },
+            const response = await context.axiosInstance.patch(`/${dailyNotes!.id}`, {
+                files: {
+                    [filename]: {
+                        content,
                     },
-                }
-            );
+                },
+            });
 
             context.gistStore.update(response.data);
             return "Successfully updated today's note";
@@ -223,14 +222,11 @@ export const dailyHandlers: ToolModule = {
                 );
             }
 
-            const response = await context.axiosInstance.patch(
-                `/${dailyNotes!.id}`,
-                {
-                    files: {
-                        [filename]: null,
-                    },
-                }
-            );
+            const response = await context.axiosInstance.patch(`/${dailyNotes!.id}`, {
+                files: {
+                    [filename]: null,
+                },
+            });
 
             context.gistStore.update(response.data);
             return `Successfully deleted daily note for ${date}`;

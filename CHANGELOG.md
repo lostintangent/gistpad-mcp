@@ -1,3 +1,8 @@
+## 📆 v0.2.5 (03/16/2025)
+
+- Added support for `--daily` CLI flag to optionally include daily notes in the resources list
+- Added resource template for accessing gist comments via `gist:///{gistId}/comments` URIs
+
 ## 📆 v0.2.4 (03/15/2025)
 
 - Added support for `--starred` CLI flag to optionally include starred gists in the resources list, with notifications when gists are starred/unstarred

@@ -1,6 +1,6 @@
 {
   "name": "gistpad-mcp",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "An MCP server for managing your personal knowledge/daily notes via GitHub Gists.",
   "type": "module",
   "bin": {
@@ -16,7 +16,7 @@
     "inspector": "npx @modelcontextprotocol/inspector build/index.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "0.6.0",
+    "@modelcontextprotocol/sdk": "^1.7.0",
     "axios": "^1.8.2"
   },
   "devDependencies": {

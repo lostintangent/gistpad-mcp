@@ -1,6 +1,19 @@
-import { Gist, ResourceHandlers } from "../types.js";
+import { Gist, ResourceHandlers, isArchivedGist, isDailyNoteGist } from "../types.js";
+
+const RESOURCE_PREFIX = "gist:///";
 
 export const resourceHandlers: ResourceHandlers = {
+    listResourceTemplates: () => ({
+        resourceTemplates: [
+            {
+                uriTemplate: `${RESOURCE_PREFIX}{gistId}/comments`,
+                name: "Comments for a gist",
+                description: "List of comments on a specific gist",
+                mimeType: "application/json",
+            },
+        ],
+    }),
+
     listResources: async (context) => {
         let gists = await context.gistStore.getAll();
 
@@ -14,9 +27,12 @@ export const resourceHandlers: ResourceHandlers = {
         }
         return {
             resources: gists
-                .filter((gist) => context.showArchived || !gist.description?.endsWith(" [Archived]"))
+                .filter((gist) =>
+                    (context.showArchived || !isArchivedGist(gist)) &&
+                    (context.showDaily || !isDailyNoteGist(gist))
+                )
                 .map((gist) => ({
-                    uri: `gist:///${gist.id}`,
+                    uri: `${RESOURCE_PREFIX}${gist.id}`,
                     name:
                         gist.description ||
                         Object.keys(gist.files)[0].replace(".md", "") ||
@@ -27,9 +43,24 @@ export const resourceHandlers: ResourceHandlers = {
     },
 
     readResource: async (uri, context) => {
-        const gistId = new URL(uri).pathname.replace(/^\//, "");
+        const url = new URL(uri);
+        const path = url.pathname.replace(/^\//, "");
 
-        const response = await context.axiosInstance.get(`/${gistId}`);
+        if (path.endsWith("/comments")) {
+            const gistId = path.replace("/comments", "");
+            const response = await context.axiosInstance.get(`/${gistId}/comments`);
+            return {
+                contents: [
+                    {
+                        uri,
+                        mimeType: "application/json",
+                        text: JSON.stringify(response.data, null, 2),
+                    },
+                ],
+            };
+        }
+
+        const response = await context.axiosInstance.get(`/${path}`);
         const gist: Gist = response.data;
 
         context.gistStore.update(gist);

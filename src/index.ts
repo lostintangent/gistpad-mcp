@@ -6,6 +6,7 @@ import {
   CallToolRequestSchema,
   ErrorCode,
   ListResourcesRequestSchema,
+  ListResourceTemplatesRequestSchema,
   ListToolsRequestSchema,
   McpError,
   ReadResourceRequestSchema,
@@ -47,7 +48,7 @@ class GistpadServer {
     this.server = new Server(
       {
         name: "gistpad",
-        version: "0.2.4",
+        version: "0.2.5",
       },
       {
         capabilities: {
@@ -64,13 +65,12 @@ class GistpadServer {
             listChanged: false,
           },
         },
+        instructions: `GistPad allows you to manage your personal knowledge and daily notes/todos/etc. using GitHub Gists.
+To read gists, notes, and gist comments, prefer using the available resources vs. tools. And then use the available tools to create, update, delete, archive, star, etc. your gists.`,
       }
     );
 
-    this.gistStore = new YourGistStore(
-      this.axiosInstance,
-      this.server
-    );
+    this.gistStore = new YourGistStore(this.axiosInstance, this.server);
 
     this.starredGistStore = new StarredGistStore(
       this.axiosInstance,
@@ -94,6 +94,7 @@ class GistpadServer {
       axiosInstance: this.axiosInstance,
       showArchived: process.argv.includes("--archived"),
       showStarred: process.argv.includes("--starred"),
+      showDaily: process.argv.includes("--daily"),
     };
   }
 
@@ -110,6 +111,10 @@ class GistpadServer {
         return resourceHandlers.readResource(uri, context);
       }
     );
+
+    this.server.setRequestHandler(ListResourceTemplatesRequestSchema, () =>
+      resourceHandlers.listResourceTemplates()
+    );
   }
 
   private setupToolHandlers() {
@@ -121,7 +126,7 @@ class GistpadServer {
         ...archiveHandlers.tools,
         ...dailyHandlers.tools,
         ...commentHandlers.tools,
-      ]
+      ],
     }));
 
     const toolHandlers = {

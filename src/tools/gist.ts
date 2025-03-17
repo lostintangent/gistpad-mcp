@@ -1,5 +1,5 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { Gist, ToolModule } from "../types.js";
+import { Gist, ToolModule, isArchivedGist, isDailyNoteGist } from "../types.js";
 
 export const gistHandlers: ToolModule = {
     tools: [
@@ -102,9 +102,7 @@ export const gistHandlers: ToolModule = {
         list_gists: async (args, context) => {
             const gists = await context.gistStore.getAll();
             const filteredGists = gists.filter(
-                (gist) =>
-                    gist.description !== "📆 Daily notes" &&
-                    !gist.description?.endsWith(" [Archived]")
+                (gist) => !isDailyNoteGist(gist) && !isArchivedGist(gist)
             );
 
             return {
@@ -150,11 +148,7 @@ export const gistHandlers: ToolModule = {
         },
 
         create_gist: async (args, context) => {
-            const {
-                content,
-                description = "",
-                public: isPublic = false,
-            } = args;
+            const { content, description = "", public: isPublic = false } = args;
 
             if (!description || !content) {
                 throw new McpError(
