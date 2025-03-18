@@ -1,8 +1,8 @@
 import {
-    Gist,
     ResourceHandlers,
     isArchivedGist,
     isDailyNoteGist,
+    mcpGist,
 } from "../types.js";
 
 const RESOURCE_PREFIX = "gist:///";
@@ -67,9 +67,7 @@ export const resourceHandlers: ResourceHandlers = {
             };
         }
 
-        const response = await context.axiosInstance.get(`/${path}`);
-        const gist: Gist = response.data;
-
+        const { data: gist } = await context.axiosInstance.get(`/${path}`);
         context.gistStore.update(gist);
 
         return {
@@ -77,27 +75,7 @@ export const resourceHandlers: ResourceHandlers = {
                 {
                     uri,
                     mimeType: "application/json",
-                    text: JSON.stringify(
-                        {
-                            id: gist.id,
-                            description: gist.description,
-                            files: Object.fromEntries(
-                                Object.entries(gist.files).map(([name, file]) => [
-                                    name,
-                                    {
-                                        content: file.content,
-                                        language: file.language,
-                                        size: file.size,
-                                    },
-                                ])
-                            ),
-                            created_at: gist.created_at,
-                            updated_at: gist.updated_at,
-                            public: gist.public,
-                        },
-                        null,
-                        2
-                    ),
+                    text: JSON.stringify(mcpGist(gist), null, 2),
                 },
             ],
         };

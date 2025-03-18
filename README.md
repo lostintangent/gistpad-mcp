@@ -46,7 +46,7 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
 
 - `list_gists` - List all of your gists (excluding daily notes and archived gists).
 - `get_gist` - Get the contents of a gist by ID.
-- `create_gist` - Create a new gist with a specified descrpition and initial `README.md` content.
+- `create_gist` - Create a new gist with a specified description and initial file contents.
 - `delete_gist` - Delete a gist by ID.
 - `update_gist_description` - Update a gist's description by ID.
 - `duplicate_gist` - Create a copy of an existing gist with all its files.

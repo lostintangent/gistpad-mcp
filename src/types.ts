@@ -2,6 +2,14 @@ import { StarredGistStore, YourGistStore } from "./store.js";
 
 // Utility functions
 
+export function mcpGist(gist: Gist) {
+    return {
+        ...gist,
+        url: `https://gistpad.dev/#/${gist.id}`,
+        share_url: `https://gistpad.dev/#/share/${gist.id}`,
+    };
+}
+
 export const isArchivedGist = (gist: Gist): boolean => {
     return gist.description?.endsWith(" [Archived]") ?? false;
 };
@@ -70,8 +78,8 @@ export type ToolDefinition = {
 };
 
 export interface ToolModule {
+    definitions: ToolDefinition[];
     handlers: Record<string, ToolHandler>;
-    tools: ToolDefinition[];
 }
 
 export interface ResourceHandlers {

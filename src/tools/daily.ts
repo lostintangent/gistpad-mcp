@@ -52,8 +52,8 @@ async function createTodaysNote(
     return response.data;
 }
 
-export const dailyHandlers: ToolModule = {
-    tools: [
+export default {
+    definitions: [
         {
             name: "get_todays_note",
             description:
@@ -232,4 +232,4 @@ export const dailyHandlers: ToolModule = {
             return `Successfully deleted daily note for ${date}`;
         },
     },
-};
+} as ToolModule

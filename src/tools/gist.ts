@@ -1,8 +1,14 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { Gist, ToolModule, isArchivedGist, isDailyNoteGist } from "../types.js";
+import {
+    Gist,
+    ToolModule,
+    isArchivedGist,
+    isDailyNoteGist,
+    mcpGist,
+} from "../types.js";
 
-export const gistHandlers: ToolModule = {
-    tools: [
+export default {
+    definitions: [
         {
             name: "list_gists",
             description:
@@ -15,7 +21,8 @@ export const gistHandlers: ToolModule = {
         },
         {
             name: "get_gist",
-            description: "Get the full contents of a GitHub Gist by ID (including files",
+            description:
+                "Get the full contents of a GitHub Gist by ID (including file contents).",
             inputSchema: {
                 type: "object",
                 properties: {
@@ -39,7 +46,8 @@ export const gistHandlers: ToolModule = {
                     },
                     filename: {
                         type: "string",
-                        description: "Name of the file to create (Defaults to README.md)",
+                        description:
+                            "Name of the file to create. This defaults to README.md, and so only specify it if explicity requested by the user, or you need to create a non-markdown file.",
                         default: "README.md",
                     },
                     content: {
@@ -48,7 +56,8 @@ export const gistHandlers: ToolModule = {
                     },
                     public: {
                         type: "boolean",
-                        description: "Whether the Gist should be public (Defaults to false)",
+                        description:
+                            "Whether the Gist should be public (Defaults to false)",
                         default: false,
                     },
                 },
@@ -104,7 +113,7 @@ export const gistHandlers: ToolModule = {
     ],
 
     handlers: {
-        list_gists: async (args, context) => {
+        list_gists: async (_, context) => {
             const gists = await context.gistStore.getAll();
             const filteredGists = gists.filter(
                 (gist) => !isDailyNoteGist(gist) && !isArchivedGist(gist)
@@ -112,48 +121,25 @@ export const gistHandlers: ToolModule = {
 
             return {
                 count: filteredGists.length,
-                gists: filteredGists.map((gist) => ({
-                    id: gist.id,
-                    description: gist.description,
-                    files: Object.keys(gist.files),
-                    created_at: gist.created_at,
-                    updated_at: gist.updated_at,
-                    public: gist.public,
-                    url: `https://gistpad.dev/#/${gist.id}`,
-                    share_url: `https://gistpad.dev/#/share/${gist.id}`,
-                })),
+                gists: filteredGists.map(mcpGist),
             };
         },
 
         get_gist: async ({ id }, context) => {
-            const response = await context.axiosInstance.get(`/${id}`);
-            const gist: Gist = response.data;
+            const { data: gist } = await context.axiosInstance.get(`/${id}`);
 
             context.gistStore.update(gist);
 
-            return {
-                id: gist.id,
-                description: gist.description,
-                files: Object.fromEntries(
-                    Object.entries(gist.files).map(([name, file]) => [
-                        name,
-                        {
-                            content: file.content,
-                            language: file.language,
-                            size: file.size,
-                        },
-                    ])
-                ),
-                created_at: gist.created_at,
-                updated_at: gist.updated_at,
-                public: gist.public,
-                url: `https://gistpad.dev/#/${gist.id}`,
-                share_url: `https://gistpad.dev/#/share/${gist.id}`,
-            };
+            return mcpGist(gist);
         },
 
         create_gist: async (args, context) => {
-            const { content, description = "", public: isPublic = false } = args;
+            const {
+                description = "",
+                filename = "README.md",
+                content,
+                public: isPublic = false,
+            } = args;
 
             if (!description || !content) {
                 throw new McpError(
@@ -162,23 +148,19 @@ export const gistHandlers: ToolModule = {
                 );
             }
 
-            const response = await context.axiosInstance.post("", {
+            const { data: gist } = await context.axiosInstance.post("", {
                 description,
                 public: isPublic,
                 files: {
-                    ["README.md"]: {
+                    [filename as string]: {
                         content,
                     },
                 },
             });
 
-            context.gistStore.add(response.data);
+            context.gistStore.add(gist);
 
-            return {
-                id: response.data.id,
-                url: `https://gistpad.dev/#/${response.data.id}`,
-                description,
-            };
+            return mcpGist(gist);
         },
 
         delete_gist: async ({ id }, context) => {
@@ -186,9 +168,7 @@ export const gistHandlers: ToolModule = {
 
             context.gistStore.remove(id as string);
 
-            return {
-                message: "Successfully deleted gist",
-            };
+            return "Successfully deleted gist";
         },
 
         update_gist_description: async ({ id, description }, context) => {
@@ -199,17 +179,13 @@ export const gistHandlers: ToolModule = {
                 );
             }
 
-            const response = await context.axiosInstance.patch(`/${id}`, {
+            const { data: gist } = await context.axiosInstance.patch(`/${id}`, {
                 description,
             });
 
-            context.gistStore.update(response.data);
+            context.gistStore.update(gist);
 
-            return {
-                id,
-                description: response.data.description,
-                message: "Successfully updated gist description",
-            };
+            return "Successfully updated gist description";
         },
 
         duplicate_gist: async ({ id }, context) => {
@@ -224,7 +200,7 @@ export const gistHandlers: ToolModule = {
             }
 
             const newDescription = `${sourceGist.description || ""} (Copy)`.trim();
-            const response = await context.axiosInstance.post("", {
+            const { data: gist } = await context.axiosInstance.post("", {
                 description: newDescription,
                 public: sourceGist.public,
                 files: Object.fromEntries(
@@ -235,15 +211,9 @@ export const gistHandlers: ToolModule = {
                 ),
             });
 
-            context.gistStore.add(response.data);
+            context.gistStore.add(gist);
 
-            return {
-                source_id: id,
-                new_id: response.data.id,
-                description: newDescription,
-                files: Object.keys(response.data.files),
-                message: "Successfully duplicated gist",
-            };
+            return mcpGist(gist);
         },
     },
-};
+} as ToolModule;

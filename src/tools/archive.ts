@@ -1,8 +1,8 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { Gist, ToolModule, isArchivedGist, isDailyNoteGist } from "../types.js";
+import { Gist, isArchivedGist, isDailyNoteGist, mcpGist, ToolModule } from "../types.js";
 
-export const archiveHandlers: ToolModule = {
-    tools: [
+export default {
+    definitions: [
         {
             name: "list_archived_gists",
             description: "List all of your archived gists",
@@ -48,13 +48,7 @@ export const archiveHandlers: ToolModule = {
             const archivedGists = gists.filter(isArchivedGist);
             return {
                 count: archivedGists.length,
-                gists: archivedGists.map((gist) => ({
-                    id: gist.id,
-                    description: gist.description.replace(/ \[Archived\]$/, ""),
-                    files: Object.keys(gist.files),
-                    created_at: gist.created_at,
-                    updated_at: gist.updated_at,
-                })),
+                gists: archivedGists.map(mcpGist),
             };
         },
 
@@ -86,11 +80,7 @@ export const archiveHandlers: ToolModule = {
 
             context.gistStore.update(response.data);
 
-            return {
-                id: response.data.id,
-                description: response.data.description.replace(/ \[Archived\]$/, ""),
-                message: "Gist archived successfully",
-            };
+            return "Gist archived successfully";
         },
 
         unarchive_gist: async ({ id }, context) => {
@@ -100,7 +90,7 @@ export const archiveHandlers: ToolModule = {
             if (!gist) {
                 throw new McpError(
                     ErrorCode.InvalidParams,
-                    `Gist with ID '${id}' not found`
+                    `Gist with ID "${id}" not found`
                 );
             }
 
@@ -115,11 +105,7 @@ export const archiveHandlers: ToolModule = {
 
             context.gistStore.update(response.data);
 
-            return {
-                id: response.data.id,
-                description: response.data.description,
-                message: "Gist unarchived successfully",
-            };
+            return "Gist unarchived successfully";
         },
     },
-};
+} as ToolModule;

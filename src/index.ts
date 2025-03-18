@@ -14,14 +14,12 @@ import {
 import axios from "axios";
 import { resourceHandlers } from "./resources/gists.js";
 import { StarredGistStore, YourGistStore } from "./store.js";
-import {
-  archiveHandlers,
-  basicHandlers,
-  commentHandlers,
-  dailyHandlers,
-  fileHandlers,
-  starHandlers,
-} from "./tools/index.js";
+import archiveTools from "./tools/archive.js";
+import commentTools from "./tools/comments.js";
+import dailyTools from "./tools/daily.js";
+import fileTools from "./tools/files.js";
+import gistTools from "./tools/gist.js";
+import starTools from "./tools/star.js";
 import { RequestContext } from "./types.js";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -129,22 +127,22 @@ To read gists, notes, and gist comments, prefer using the available resources vs
   private setupToolHandlers() {
     this.server.setRequestHandler(ListToolsRequestSchema, () => ({
       tools: [
-        ...basicHandlers.tools,
-        ...fileHandlers.tools,
-        ...starHandlers.tools,
-        ...archiveHandlers.tools,
-        ...dailyHandlers.tools,
-        ...commentHandlers.tools,
+        ...gistTools.definitions,
+        ...fileTools.definitions,
+        ...starTools.definitions,
+        ...archiveTools.definitions,
+        ...dailyTools.definitions,
+        ...commentTools.definitions,
       ],
     }));
 
     const toolHandlers = {
-      ...basicHandlers.handlers,
-      ...fileHandlers.handlers,
-      ...starHandlers.handlers,
-      ...archiveHandlers.handlers,
-      ...dailyHandlers.handlers,
-      ...commentHandlers.handlers,
+      ...gistTools.handlers,
+      ...fileTools.handlers,
+      ...starTools.handlers,
+      ...archiveTools.handlers,
+      ...dailyTools.handlers,
+      ...commentTools.handlers,
     };
 
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
