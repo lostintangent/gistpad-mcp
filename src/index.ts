@@ -70,12 +70,21 @@ To read gists, notes, and gist comments, prefer using the available resources vs
       }
     );
 
-    this.gistStore = new YourGistStore(this.axiosInstance, this.server);
+    const markdownOnly = process.argv.includes("--markdown");
+    const includeStarred = process.argv.includes("--starred");
+
+    this.gistStore = new YourGistStore(
+      this.axiosInstance,
+      this.server,
+      true,
+      markdownOnly
+    );
 
     this.starredGistStore = new StarredGistStore(
       this.axiosInstance,
       this.server,
-      process.argv.includes("--starred")
+      includeStarred,
+      markdownOnly
     );
 
     this.setupResourceHandlers();
@@ -92,9 +101,9 @@ To read gists, notes, and gist comments, prefer using the available resources vs
       gistStore: this.gistStore,
       starredGistStore: this.starredGistStore,
       axiosInstance: this.axiosInstance,
-      showArchived: process.argv.includes("--archived"),
-      showStarred: process.argv.includes("--starred"),
-      showDaily: process.argv.includes("--daily"),
+      includeArchived: process.argv.includes("--archived"),
+      includeStarred: process.argv.includes("--starred"),
+      includeDaily: process.argv.includes("--daily"),
     };
   }
 

@@ -15,7 +15,7 @@ export const gistHandlers: ToolModule = {
         },
         {
             name: "get_gist",
-            description: "Get a specific GitHub Gist by ID",
+            description: "Get the full contents of a GitHub Gist by ID (including files",
             inputSchema: {
                 type: "object",
                 properties: {
@@ -37,13 +37,18 @@ export const gistHandlers: ToolModule = {
                         type: "string",
                         description: "Description of the Gist",
                     },
+                    filename: {
+                        type: "string",
+                        description: "Name of the file to create (Defaults to README.md)",
+                        default: "README.md",
+                    },
                     content: {
                         type: "string",
-                        description: "Content of the file",
+                        description: "Contents of the new file",
                     },
                     public: {
                         type: "boolean",
-                        description: "Whether the Gist should be public",
+                        description: "Whether the Gist should be public (Defaults to false)",
                         default: false,
                     },
                 },

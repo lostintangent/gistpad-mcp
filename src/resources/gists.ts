@@ -1,4 +1,9 @@
-import { Gist, ResourceHandlers, isArchivedGist, isDailyNoteGist } from "../types.js";
+import {
+    Gist,
+    ResourceHandlers,
+    isArchivedGist,
+    isDailyNoteGist,
+} from "../types.js";
 
 const RESOURCE_PREFIX = "gist:///";
 
@@ -17,19 +22,21 @@ export const resourceHandlers: ResourceHandlers = {
     listResources: async (context) => {
         let gists = await context.gistStore.getAll();
 
-        if (context.showStarred) {
+        if (context.includeStarred) {
             const starredGists = await context.starredGistStore.getAll();
-            const markedStarredGists = starredGists.map(gist => ({
+            const markedStarredGists = starredGists.map((gist) => ({
                 ...gist,
-                description: (gist.description || "") + " [Starred]"
+                description: (gist.description || "") + " [Starred]",
             }));
             gists = [...gists, ...markedStarredGists];
         }
+
         return {
             resources: gists
-                .filter((gist) =>
-                    (context.showArchived || !isArchivedGist(gist)) &&
-                    (context.showDaily || !isDailyNoteGist(gist))
+                .filter(
+                    (gist) =>
+                        (context.includeArchived || !isArchivedGist(gist)) &&
+                        (context.includeDaily || !isDailyNoteGist(gist))
                 )
                 .map((gist) => ({
                     uri: `${RESOURCE_PREFIX}${gist.id}`,

@@ -1,10 +1,11 @@
 # 📓 GistPad MCP
 
-An MCP server for managing and sharing your personal knowledge/daily notes via GitHub Gists. It's a companion to the GistPad [VS Code extension](https://aka.ms/gistpad) and [GistPad.dev](https://gistpad.dev) (for web/mobile), which allows you to access and edit your gists from any MCP-enabled AI product (e.g. Claude Desktop).
+An MCP server for managing and sharing your personal knowledge/daily notes via GitHub Gists. It's a companion to the GistPad [VS Code extension](https://aka.ms/gistpad) and [GistPad.dev](https://gistpad.dev) (for web/mobile), which allows you to access and edit your gists from any MCP-enabled AI product (e.g. GitHub Copilot, Claude Desktop).
 
 - 🏃 [Getting started](#-getting-started)
 - 🛠️ [Included tools](#️-included-tools)
 - 📁 [Included resources](#-included-resources)
+- 💻 [CLI reference](#-cli-reference)
 
 ## 🏃 Getting started
 
@@ -104,3 +105,12 @@ If you'd like to expose either your archived gists, starred gists, and/or daily 
 <ins>Unsupported/future enhancements:</ins>
 
 - Allowing clients to subscribe to updates for specific gists
+
+## 💻 CLI Reference
+
+The `gistpad-mcp` CLI accepts the following optional flags:
+
+- `--archived` - Include archived gists in the list of MCP resources _(Note: The `list_archived_gists` tool is always available)_
+- `--starred` - Include starred gists in the list of MCP resources _(Note: The `list_starred_gists` tool is always available)_
+- `--daily` - Include daily notes in the list of MCP resources _(Note: The `list_daily_notes` tool is always available)_
+- `--markdown` - Filter the list of gists that are returned, to only those that are composed of Markdown files.

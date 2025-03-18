@@ -1,3 +1,7 @@
+## 📆 v0.3.0 (03/18/2025)
+
+- Added support for the `--markdown` CLI flag to filter the gists that are returned to Markdown-only
+
 ## 📆 v0.2.5 (03/16/2025)
 
 - Added support for `--daily` CLI flag to optionally include daily notes in the resources list

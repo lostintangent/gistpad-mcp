@@ -3,6 +3,7 @@ import { Gist, isDailyNoteGist } from "./types.js";
 function filterGists(gists: Gist[]): Gist[] {
     return gists.filter((gist: Gist) => {
         const files = Object.entries(gist.files);
+
         return files.every(
             ([_, file]) =>
                 file.language === "Markdown" || file.filename.endsWith(".tldraw")
@@ -18,10 +19,11 @@ export abstract class GistStore {
             get<T>(url: string, config?: any): Promise<{ data: T }>;
         },
         private server: { sendResourceListChanged(): void },
-        private triggerNotifications: boolean = true
+        private triggerNotifications: boolean = true,
+        private markdownOnly: boolean = false
     ) { }
 
-    protected abstract fetchData(): Promise<Gist[]>;
+    protected abstract fetchGists(): Promise<Gist[]>;
 
     private notifyResourceListChanged(): void {
         if (this.triggerNotifications) {
@@ -31,7 +33,8 @@ export abstract class GistStore {
 
     async getAll(): Promise<Gist[]> {
         if (this.cache === null) {
-            this.cache = await this.fetchData();
+            const gists = await this.fetchGists();
+            this.cache = this.markdownOnly ? filterGists(gists) : gists;
         }
         return this.cache;
     }
@@ -72,7 +75,7 @@ export class YourGistStore extends GistStore {
     private dailyNotesGistId: string | null = null;
 
     async getDailyNotes(): Promise<Gist | null> {
-        const gists = await this.fetchData();
+        const gists = await this.fetchGists();
         if (this.dailyNotesGistId) {
             const gist = gists.find((gist) => gist.id === this.dailyNotesGistId);
             if (gist) {
@@ -88,7 +91,7 @@ export class YourGistStore extends GistStore {
         this.dailyNotesGistId = gist.id;
     }
 
-    protected async fetchData(): Promise<Gist[]> {
+    protected async fetchGists(): Promise<Gist[]> {
         const allGists: Gist[] = [];
         let page = 1;
         const perPage = 100;
@@ -102,8 +105,7 @@ export class YourGistStore extends GistStore {
             });
 
             const gists = response.data;
-            const filteredGists = filterGists(gists);
-            allGists.push(...filteredGists);
+            allGists.push(...gists);
 
             if (gists.length < perPage) {
                 break;
@@ -122,8 +124,8 @@ export class YourGistStore extends GistStore {
 }
 
 export class StarredGistStore extends GistStore {
-    protected async fetchData(): Promise<Gist[]> {
+    protected async fetchGists(): Promise<Gist[]> {
         const response = await this.axiosInstance.get<Gist[]>("/starred");
-        return filterGists(response.data);
+        return response.data;
     }
 }

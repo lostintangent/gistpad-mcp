@@ -49,9 +49,9 @@ export interface RequestContext {
     gistStore: YourGistStore;
     starredGistStore: StarredGistStore;
     axiosInstance: any;
-    showArchived: boolean;
-    showStarred: boolean;
-    showDaily: boolean;
+    includeArchived: boolean;
+    includeStarred: boolean;
+    includeDaily: boolean;
 }
 
 export type ToolHandler = (
