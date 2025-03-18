@@ -1,3 +1,4 @@
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { Gist, isDailyNoteGist } from "./types.js";
 
 function filterGists(gists: Gist[]): Gist[] {
@@ -13,12 +14,13 @@ function filterGists(gists: Gist[]): Gist[] {
 
 export abstract class GistStore {
     private cache: Gist[] | null = null;
+    private subscribedGists: Set<string> = new Set();
 
     constructor(
         protected axiosInstance: {
             get<T>(url: string, config?: any): Promise<{ data: T }>;
         },
-        private server: { sendResourceListChanged(): void },
+        private server: Server,
         private triggerNotifications: boolean = true,
         private markdownOnly: boolean = false
     ) { }
@@ -28,6 +30,12 @@ export abstract class GistStore {
     private notifyResourceListChanged(): void {
         if (this.triggerNotifications) {
             this.server.sendResourceListChanged();
+        }
+    }
+
+    private notifyResourceChanged(gistId: string): void {
+        if (this.triggerNotifications && this.subscribedGists.has(gistId)) {
+            this.server.sendResourceUpdated({ uri: `gist:///${gistId}` });
         }
     }
 
@@ -59,15 +67,27 @@ export abstract class GistStore {
             if (index !== -1) {
                 const oldGist = this.cache[index];
                 this.cache[index] = gist;
+
+                // If the description changed, the list of resources has changed
                 if (oldGist.description !== gist.description) {
                     this.notifyResourceListChanged();
                 }
+
+                this.notifyResourceChanged(gist.id);
             }
         }
     }
 
     invalidate(): void {
         this.cache = null;
+    }
+
+    subscribe(gistId: string): void {
+        this.subscribedGists.add(gistId);
+    }
+
+    unsubscribe(gistId: string): void {
+        this.subscribedGists.delete(gistId);
     }
 }
 

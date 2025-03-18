@@ -85,26 +85,17 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
 - `edit_gist_comment` - Update the content of an existing comment.
 - `delete_gist_comment` - Delete a comment from a gist.
 
-<ins>Unsupported/future enhancements:</ins>
-
-- Exposing the daily tasks and overdue status as tool context
-- Paginating comments or starred gists (these aren't commonly long lists!)
-- Any of the AI features from gistpad.dev (since the MCP client will have these!)
-
 ## 📁 Included resources
 
 In addition to the above tools, the GistPad MCP server also exposes your gists as resources (using the `gist:///` URI scheme), which allows clients to read them without requiring tool execution.
 
-When you add/delete/duplicate a gist, or change a gist's description, then a notification will be provided to MCP clients, indicating that the list of resources have changed.
+When you add/delete/duplicate a gist, or change a gist's description, then a notification will be provided to MCP clients, indicating that the list of resources have changed. And if your MCP client supports resource subscriptions, then you can subscribe to a specific gist and get notified when it's updated.
+
 Additionally, for MCP clients that support resource templates, GistPad also exposes a resource at `gist:///{gistId}/comments`, which allows querying the comments for a gist (without needing to execute the `list_gist_comments` tool).
 
 ### Resource configuration
 
 If you'd like to expose either your archived gists, starred gists, and/or daily notes as resources, then simply update your MCP server config to pass the `--archived`, `--starred`, and/or `--daily` flags to the `gistpad-mcp` CLI.
-
-<ins>Unsupported/future enhancements:</ins>
-
-- Allowing clients to subscribe to updates for specific gists
 
 ## 💻 CLI Reference
 

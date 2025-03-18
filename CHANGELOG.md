@@ -1,3 +1,7 @@
+## 📆 v0.3.1 (03/18/2025)
+
+- Added support for clients to subscribe to changes for a specific gist
+
 ## 📆 v0.3.0 (03/18/2025)
 
 - Added support for the `--markdown` CLI flag to filter the gists that are returned to Markdown-only

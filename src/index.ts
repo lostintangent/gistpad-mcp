@@ -10,6 +10,8 @@ import {
   ListToolsRequestSchema,
   McpError,
   ReadResourceRequestSchema,
+  SubscribeRequestSchema,
+  UnsubscribeRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import axios from "axios";
 import { resourceHandlers } from "./resources/gists.js";
@@ -46,12 +48,14 @@ class GistpadServer {
     this.server = new Server(
       {
         name: "gistpad",
-        version: "0.3.0",
+        version: "0.3.1",
       },
       {
         capabilities: {
           resources: {
-            subscribe: false,
+            // If a client wants to subscribe to changes
+            // to a specific gist, they can do that.
+            subscribe: true,
 
             // This server will notify clients anytime that a gist
             // is added, deleted, renamed or duplicated.
@@ -86,6 +90,7 @@ To read gists, notes, and gist comments, prefer using the available resources vs
     );
 
     this.setupResourceHandlers();
+    this.setupSubscriptionHandlers();
     this.setupToolHandlers();
 
     process.on("SIGINT", async () => {
@@ -121,6 +126,24 @@ To read gists, notes, and gist comments, prefer using the available resources vs
 
     this.server.setRequestHandler(ListResourceTemplatesRequestSchema, () =>
       resourceHandlers.listResourceTemplates()
+    );
+  }
+
+  private setupSubscriptionHandlers() {
+    this.server.setRequestHandler(
+      SubscribeRequestSchema,
+      async ({ params: { uri } }) => {
+        this.gistStore.subscribe(uri);
+        return { success: true };
+      }
+    );
+
+    this.server.setRequestHandler(
+      UnsubscribeRequestSchema,
+      async ({ params: { uri } }) => {
+        this.gistStore.unsubscribe(uri);
+        return { success: true };
+      }
     );
   }
 
