@@ -1,3 +1,7 @@
+## 📆 v0.3.2 (03/18/2025)
+
+- Fixed a few bugs in the format that gist resources were being returned in
+
 ## 📆 v0.3.1 (03/18/2025)
 
 - Added support for clients to subscribe to changes for a specific gist

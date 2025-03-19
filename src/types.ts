@@ -4,7 +4,19 @@ import { StarredGistStore, YourGistStore } from "./store.js";
 
 export function mcpGist(gist: Gist) {
     return {
-        ...gist,
+        id: gist.id,
+        description: gist.description,
+        owner: gist.owner.login,
+        public: gist.public,
+        created_at: gist.created_at,
+        updated_at: gist.updated_at,
+        files: Object.entries(gist.files).map(([filename, file]) => ({
+            filename,
+            type: file.type,
+            size: file.size,
+            content: file.content,
+        })),
+        comments: gist.comments,
         url: `https://gistpad.dev/#/${gist.id}`,
         share_url: `https://gistpad.dev/#/share/${gist.id}`,
     };
@@ -47,6 +59,10 @@ export interface Gist {
     public: boolean;
     created_at: string;
     updated_at: string;
+    owner: {
+        login: string;
+    };
+    comments: number;
     url: string;
     share_url: string;
 }
