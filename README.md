@@ -33,12 +33,31 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
 
 1. :partying_face: Start having fun with gists + MCP! For example, try things like...
 
-   1. `How many gists have I updated this month?`
-   1. `What are my unfinished todos for today?`
-   1. `Create a new gist about the JavaScript programming language`
-   1. `Archive my gist about <foo>`
-   1. `Give me a share URL for the gist about <bar>`
-   1. Much much more!
+   1. **Exploring content**
+
+   - `How many gists have I edited this month?`
+   - `What's the summary of my <foo> gist?`
+
+   1. **Creating content**
+
+   - `Create a new gist about <foo>`
+   - `Update my <foo> gist to call out <bar>`
+
+   1. **Daily todos**
+
+   - `What are my unfinished todos for today?`
+   - `Add a new todo for <foo>`
+
+   1. **Collaboration**
+
+   - `Add a comment to the <foo> gist saying <bar>`
+   - `Give me a share URL for the <foo> gist`
+   - `View my starred gists`
+
+   1. **Gist organization**
+
+   - `Archive my gist about <foo>`
+   - `Add a new <foo> file to the <bar> gist and migrate the <baz> content into it`
 
 ## 🛠️ Included tools
 
