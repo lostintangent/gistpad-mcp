@@ -1,4 +1,5 @@
 import {
+    GistFile,
     ResourceHandlers,
     isArchivedGist,
     isDailyNoteGist,
@@ -70,14 +71,23 @@ export const resourceHandlers: ResourceHandlers = {
         const { data: gist } = await context.axiosInstance.get(`/${path}`);
         context.gistStore.update(gist);
 
+        const resource = {
+            uri,
+            mimeType: "application/json",
+            text: JSON.stringify(mcpGist(gist), null, 2)
+        };
+
+        // Note: Nothing uses this at the moment, but it could be useful in the future.
+        if (path.endsWith("/raw")) {
+            const mainFile: GistFile =
+                gist.files["README.md"] || Object.keys(gist.files)[0]!;
+
+            resource.mimeType = mainFile.type;
+            resource.text = mainFile.content;
+        }
+
         return {
-            contents: [
-                {
-                    uri,
-                    mimeType: "application/json",
-                    text: JSON.stringify(mcpGist(gist), null, 2),
-                },
-            ],
+            contents: [resource],
         };
     },
 };

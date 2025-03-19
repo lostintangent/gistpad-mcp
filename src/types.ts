@@ -122,7 +122,7 @@ export interface ResourceHandlers {
     ) => Promise<{
         contents: Array<{
             uri: string;
-            mimeType: "application/json";
+            mimeType: string;
             text: string;
         }>;
     }>;
