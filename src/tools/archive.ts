@@ -43,9 +43,10 @@ export default {
     ],
 
     handlers: {
-        list_archived_gists: async (args, context) => {
+        list_archived_gists: async (_, context) => {
             const gists = await context.gistStore.getAll();
             const archivedGists = gists.filter(isArchivedGist);
+
             return {
                 count: archivedGists.length,
                 gists: archivedGists.map(mcpGist),
@@ -74,8 +75,9 @@ export default {
                 throw new McpError(ErrorCode.InvalidParams, "Gist is already archived");
             }
 
+            const newDescription = `${gist.description || ""} [Archived]`.trim();
             const response = await context.axiosInstance.patch(`/${id}`, {
-                description: `${gist.description || ""} [Archived]`.trim(),
+                description: newDescription
             });
 
             context.gistStore.update(response.data);
