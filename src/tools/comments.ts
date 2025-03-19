@@ -83,7 +83,6 @@ export default {
             const comments = response.data as GistComment[];
 
             return {
-                gist_id: id,
                 count: comments.length,
                 comments: comments.map((comment) => ({
                     id: comment.id,
@@ -117,11 +116,7 @@ export default {
         delete_gist_comment: async ({ gist_id, comment_id }, context) => {
             await context.axiosInstance.delete(`/${gist_id}/comments/${comment_id}`);
 
-            return {
-                gist_id,
-                comment_id,
-                message: "Comment deleted successfully",
-            };
+            return "Comment deleted successfully";
         },
 
         edit_gist_comment: async ({ gist_id, comment_id, body }, context) => {
@@ -136,11 +131,7 @@ export default {
                 body,
             });
 
-            return {
-                gist_id,
-                comment_id,
-                message: "Comment updated successfully",
-            };
+            return "Comment updated successfully";
         },
     },
 } as ToolModule

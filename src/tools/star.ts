@@ -42,7 +42,7 @@ export default {
     ],
 
     handlers: {
-        list_starred_gists: async (args, context) => {
+        list_starred_gists: async (_, context) => {
             const starredGists = await context.starredGistStore.getAll();
 
             return {
