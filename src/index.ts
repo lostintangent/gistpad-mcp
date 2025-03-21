@@ -202,16 +202,27 @@ To read gists, notes, and gist comments, prefer using the available resources vs
         .map(([filename, file]) => {
           const name = path.basename(filename, ".md");
           const { data, content } = matter(file.content);
-          const args = data.arguments
-            ? Object.entries(data.arguments).map(
-              ([name, description]) => ({
+          let args =
+            data.arguments &&
+            Object.entries(data.arguments).map(([name, description]) => ({
+              name,
+              description,
+              required: true,
+            }));
+
+          // If no arguments defined in frontmatter, check content for placeholders
+          if (!args) {
+            const matches = [...content.matchAll(/{{([a-zA-Z_-]+)}}/g)];
+            if (matches.length > 0) {
+              // Extract unique argument names
+              const uniqueArgs = new Set(matches.map((match) => match[1]));
+              args = [...uniqueArgs].map((name) => ({
                 name,
-                description,
+                description: "",
                 required: true,
-              })
-            )
-            // TODO: Parse the content to extract arguments
-            : undefined;
+              }));
+            }
+          }
 
           return {
             name,
