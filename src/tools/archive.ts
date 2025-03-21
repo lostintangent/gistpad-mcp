@@ -1,5 +1,6 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { Gist, isArchivedGist, isDailyNoteGist, mcpGist, ToolModule } from "../types.js";
+import { Gist, ToolModule } from "../types.js";
+import { isArchivedGist, isDailyNoteGist, mcpGist } from "../utils.js";
 
 export default {
     definitions: [
@@ -77,7 +78,7 @@ export default {
 
             const newDescription = `${gist.description || ""} [Archived]`.trim();
             const response = await context.axiosInstance.patch(`/${id}`, {
-                description: newDescription
+                description: newDescription,
             });
 
             context.gistStore.update(response.data);

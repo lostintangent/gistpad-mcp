@@ -1,36 +1,5 @@
 import { StarredGistStore, YourGistStore } from "./store.js";
 
-// Utility functions
-
-export function mcpGist(gist: Gist) {
-    return {
-        id: gist.id,
-        description: gist.description,
-        owner: gist.owner.login,
-        public: gist.public,
-        created_at: gist.created_at,
-        updated_at: gist.updated_at,
-        files: Object.entries(gist.files).map(([filename, file]) => ({
-            filename,
-            type: file.type,
-            size: file.size,
-            content: file.content,
-        })),
-        comments: gist.comments,
-        url: `https://gistpad.dev/#/${gist.id}`,
-        share_url: `https://gistpad.dev/#/share/${gist.id}`,
-    };
-}
-
-export const isArchivedGist = (gist: Gist): boolean => {
-    return gist.description?.endsWith(" [Archived]") ?? false;
-};
-
-export const DAILY_NOTES_DESCRIPTION = "📆 Daily notes";
-export const isDailyNoteGist = (gist: Gist): boolean => {
-    return gist.description === DAILY_NOTES_DESCRIPTION;
-};
-
 // GitHub Gist API types
 
 export interface GistComment {

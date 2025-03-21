@@ -1,18 +1,18 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import { Gist, ToolModule } from "../types.js";
 import {
-    Gist,
-    ToolModule,
     isArchivedGist,
     isDailyNoteGist,
+    isPromptGist,
     mcpGist,
-} from "../types.js";
+} from "../utils.js";
 
 export default {
     definitions: [
         {
             name: "list_gists",
             description:
-                "List all of your GitHub Gists (excluding daily notes and archived gists)",
+                "List all of your GitHub Gists (excluding daily notes, prompts, and archived gists)",
             inputSchema: {
                 type: "object",
                 properties: {},
@@ -116,7 +116,8 @@ export default {
         list_gists: async (_, context) => {
             const gists = await context.gistStore.getAll();
             const filteredGists = gists.filter(
-                (gist) => !isDailyNoteGist(gist) && !isArchivedGist(gist)
+                (gist) =>
+                    !isDailyNoteGist(gist) && !isPromptGist(gist) && !isArchivedGist(gist)
             );
 
             return {

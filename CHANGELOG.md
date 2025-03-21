@@ -1,3 +1,7 @@
+## 📆 v0.4.0 (03/21/2025)
+
+- Introduced support for managing MCP prompts, which are managed and served from a special gist named `💬 Prompts`.
+
 ## 📆 v0.3.2 (03/18/2025)
 
 - Fixed a few bugs in the format that gist resources were being returned in

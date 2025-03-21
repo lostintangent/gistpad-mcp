@@ -1,10 +1,6 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import {
-    DAILY_NOTES_DESCRIPTION,
-    Gist,
-    RequestContext,
-    ToolModule,
-} from "../types.js";
+import { Gist, RequestContext, ToolModule } from "../types.js";
+import { DAILY_NOTES_DESCRIPTION } from "../utils.js";
 
 function getTodaysFilename(): string {
     const today = new Date();
@@ -232,4 +228,4 @@ export default {
             return `Successfully deleted daily note for ${date}`;
         },
     },
-} as ToolModule
+} as ToolModule;

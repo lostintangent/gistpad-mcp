@@ -5,6 +5,8 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   CallToolRequestSchema,
   ErrorCode,
+  GetPromptRequestSchema,
+  ListPromptsRequestSchema,
   ListResourcesRequestSchema,
   ListResourceTemplatesRequestSchema,
   ListToolsRequestSchema,
@@ -14,14 +16,11 @@ import {
   UnsubscribeRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import axios from "axios";
+import matter from "gray-matter";
+import path from "node:path";
 import { resourceHandlers } from "./resources/gists.js";
 import { StarredGistStore, YourGistStore } from "./store.js";
-import archiveTools from "./tools/archive.js";
-import commentTools from "./tools/comments.js";
-import dailyTools from "./tools/daily.js";
-import fileTools from "./tools/files.js";
-import gistTools from "./tools/gist.js";
-import starTools from "./tools/star.js";
+import { toolDefinitions, toolHandlers } from "./tools/index.js";
 import { RequestContext } from "./types.js";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -48,7 +47,7 @@ class GistpadServer {
     this.server = new Server(
       {
         name: "gistpad",
-        version: "0.3.2",
+        version: "0.4.0",
       },
       {
         capabilities: {
@@ -65,6 +64,11 @@ class GistpadServer {
             // This isn't applicable to this MCP server, since there
             // aren't any scenarios where tool availability is dynamic.
             listChanged: false,
+          },
+          prompts: {
+            // When the user adds/deletes a prompt then we'll
+            // notify the client, so they can update their list of prompts.
+            listChanged: true,
           },
         },
         instructions: `GistPad allows you to manage your personal knowledge and daily notes/todos/etc. using GitHub Gists.
@@ -92,6 +96,7 @@ To read gists, notes, and gist comments, prefer using the available resources vs
     this.setupResourceHandlers();
     this.setupSubscriptionHandlers();
     this.setupToolHandlers();
+    this.setupPromptHandlers();
 
     process.on("SIGINT", async () => {
       await this.server.close();
@@ -149,24 +154,8 @@ To read gists, notes, and gist comments, prefer using the available resources vs
 
   private setupToolHandlers() {
     this.server.setRequestHandler(ListToolsRequestSchema, () => ({
-      tools: [
-        ...gistTools.definitions,
-        ...fileTools.definitions,
-        ...starTools.definitions,
-        ...archiveTools.definitions,
-        ...dailyTools.definitions,
-        ...commentTools.definitions,
-      ],
+      tools: toolDefinitions,
     }));
-
-    const toolHandlers = {
-      ...gistTools.handlers,
-      ...fileTools.handlers,
-      ...starTools.handlers,
-      ...archiveTools.handlers,
-      ...dailyTools.handlers,
-      ...commentTools.handlers,
-    };
 
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       try {
@@ -196,6 +185,80 @@ To read gists, notes, and gist comments, prefer using the available resources vs
           `An error occurred while executing the requested tool: ${error.message}`
         );
       }
+    });
+  }
+
+  private setupPromptHandlers() {
+    this.server.setRequestHandler(ListPromptsRequestSchema, async () => {
+      const promptsGist = await this.gistStore.getPrompts();
+      if (!promptsGist) {
+        return {
+          prompts: [],
+        };
+      }
+
+      const prompts = Object.entries(promptsGist.files)
+        .filter(([filename]) => path.extname(filename) === ".md")
+        .map(([filename, file]) => {
+          const name = path.basename(filename, ".md");
+          const { data, content } = matter(file.content);
+          const args = data.arguments
+            ? Object.entries(data.arguments).map(
+              ([name, description]) => ({
+                name,
+                description,
+                required: true,
+              })
+            )
+            // TODO: Parse the content to extract arguments
+            : undefined;
+
+          return {
+            name,
+            description: data.description || "",
+            arguments: args,
+          };
+        });
+
+      return { prompts };
+    });
+
+    this.server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+      const promptsGist = await this.gistStore.getPrompts();
+      if (!promptsGist) {
+        throw new McpError(ErrorCode.InvalidRequest, "No prompts gist found");
+      }
+
+      const filename = `${request.params.name}.md`;
+      const file = promptsGist.files[filename];
+      if (!file) {
+        throw new McpError(
+          ErrorCode.InvalidRequest,
+          `Prompt "${request.params.name}" not found`
+        );
+      }
+
+      const { content } = matter(file.content);
+      let textContent = content.trim();
+
+      Object.keys(request.params.arguments || {}).forEach((key) => {
+        textContent = textContent.replace(
+          new RegExp(`{{${key}}}`, "g"),
+          request.params.arguments![key]
+        );
+      });
+
+      return {
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: textContent,
+            },
+          },
+        ],
+      };
     });
   }
 

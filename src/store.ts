@@ -1,5 +1,6 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { Gist, isDailyNoteGist } from "./types.js";
+import { Gist } from "./types.js";
+import { isContentLoaded, isDailyNoteGist, isPromptGist } from "./utils.js";
 
 function filterGists(gists: Gist[]): Gist[] {
     return gists.filter((gist: Gist) => {
@@ -39,6 +40,12 @@ export abstract class GistStore {
         }
     }
 
+    private notifyPromptListChanged(): void {
+        if (this.triggerNotifications) {
+            this.server.sendResourceListChanged();
+        }
+    }
+
     async getAll(): Promise<Gist[]> {
         if (this.cache === null) {
             const gists = await this.fetchGists();
@@ -50,7 +57,12 @@ export abstract class GistStore {
     add(gist: Gist): void {
         if (this.cache && !this.cache.some((g) => g.id === gist.id)) {
             this.cache.push(gist);
-            this.notifyResourceListChanged();
+
+            if (isPromptGist(gist)) {
+                this.notifyPromptListChanged();
+            } else {
+                this.notifyResourceListChanged();
+            }
         }
     }
 
@@ -68,12 +80,16 @@ export abstract class GistStore {
                 const oldGist = this.cache[index];
                 this.cache[index] = gist;
 
-                // If the description changed, the list of resources has changed
-                if (oldGist.description !== gist.description) {
-                    this.notifyResourceListChanged();
-                }
+                if (isPromptGist(gist)) {
+                    this.notifyPromptListChanged();
+                } else {
+                    // If the description changed, the list of resources has changed
+                    if (oldGist.description !== gist.description) {
+                        this.notifyResourceListChanged();
+                    }
 
-                this.notifyResourceChanged(gist.id);
+                    this.notifyResourceChanged(gist.id);
+                }
             }
         }
     }
@@ -93,6 +109,7 @@ export abstract class GistStore {
 
 export class YourGistStore extends GistStore {
     private dailyNotesGistId: string | null = null;
+    private promptsGistId: string | null = null;
 
     async getDailyNotes(): Promise<Gist | null> {
         const gists = await this.fetchGists();
@@ -106,9 +123,33 @@ export class YourGistStore extends GistStore {
         return null;
     }
 
+    async getPrompts(): Promise<Gist | null> {
+        const gists = await this.fetchGists();
+        if (this.promptsGistId) {
+            const gist = gists.find((gist) => gist.id === this.promptsGistId);
+            if (gist) {
+                if (isContentLoaded(gist)) return gist;
+
+                const { data: loadedGist } = await this.axiosInstance.get<Gist>(
+                    `/${this.promptsGistId}`
+                );
+
+                this.update(loadedGist);
+                return loadedGist;
+            }
+        }
+
+        return null;
+    }
+
     setDailyNotes(gist: Gist) {
         this.add(gist);
         this.dailyNotesGistId = gist.id;
+    }
+
+    setPrompts(gist: Gist) {
+        this.add(gist);
+        this.promptsGistId = gist.id;
     }
 
     protected async fetchGists(): Promise<Gist[]> {
@@ -137,6 +178,11 @@ export class YourGistStore extends GistStore {
         const dailyNotesGist = allGists.find(isDailyNoteGist);
         if (dailyNotesGist) {
             this.dailyNotesGistId = dailyNotesGist.id;
+        }
+
+        const promptsGist = allGists.find(isPromptGist);
+        if (promptsGist) {
+            this.promptsGistId = promptsGist.id;
         }
 
         return allGists;

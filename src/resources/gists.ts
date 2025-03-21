@@ -1,10 +1,10 @@
+import { GistFile, ResourceHandlers } from "../types.js";
 import {
-    GistFile,
-    ResourceHandlers,
     isArchivedGist,
     isDailyNoteGist,
+    isPromptGist,
     mcpGist,
-} from "../types.js";
+} from "../utils.js";
 
 const RESOURCE_PREFIX = "gist:///";
 
@@ -36,6 +36,7 @@ export const resourceHandlers: ResourceHandlers = {
             resources: gists
                 .filter(
                     (gist) =>
+                        !isPromptGist(gist) &&
                         (context.includeArchived || !isArchivedGist(gist)) &&
                         (context.includeDaily || !isDailyNoteGist(gist))
                 )
@@ -74,7 +75,7 @@ export const resourceHandlers: ResourceHandlers = {
         const resource = {
             uri,
             mimeType: "application/json",
-            text: JSON.stringify(mcpGist(gist), null, 2)
+            text: JSON.stringify(mcpGist(gist), null, 2),
         };
 
         // Note: Nothing uses this at the moment, but it could be useful in the future.

@@ -1,4 +1,5 @@
-import { Gist, mcpGist, ToolModule } from "../types.js";
+import { Gist, ToolModule } from "../types.js";
+import { mcpGist } from "../utils.js";
 
 export default {
     definitions: [

@@ -1,10 +1,11 @@
 # 📓 GistPad MCP
 
-An MCP server for managing and sharing your personal knowledge/daily notes via GitHub Gists. It's a companion to the GistPad [VS Code extension](https://aka.ms/gistpad) and [GistPad.dev](https://gistpad.dev) (for web/mobile), which allows you to access and edit your gists from any MCP-enabled AI product (e.g. GitHub Copilot, Claude Desktop).
+An MCP server for managing and sharing your personal knowledge, daily notes, and re-useable prompts via GitHub Gists. It's a companion to the GistPad [VS Code extension](https://aka.ms/gistpad) and [GistPad.dev](https://gistpad.dev) (for web/mobile), which allows you to access and edit your gists from any MCP-enabled AI product (e.g. GitHub Copilot, Claude Desktop).
 
 - 🏃 [Getting started](#-getting-started)
 - 🛠️ [Included tools](#️-included-tools)
 - 📁 [Included resources](#-included-resources)
+- 💬 [Custom prompts](#-custom-prompts)
 - 💻 [CLI reference](#-cli-reference)
 
 ## 🏃 Getting started
@@ -104,6 +105,11 @@ An MCP server for managing and sharing your personal knowledge/daily notes via G
 - `edit_gist_comment` - Update the content of an existing comment.
 - `delete_gist_comment` - Delete a comment from a gist.
 
+### Prompts
+
+- `add_prompt` - Add a new prompt to your prompts collection.
+- `delete_prompt` - Delete a prompt from your collection.
+
 ## 📁 Included resources
 
 In addition to the above tools, the GistPad MCP server also exposes your gists as resources (using the `gist:///` URI scheme), which allows clients to read them without requiring tool execution.
@@ -115,6 +121,12 @@ Additionally, for MCP clients that support resource templates, GistPad also expo
 ### Resource configuration
 
 If you'd like to expose either your archived gists, starred gists, and/or daily notes as resources, then simply update your MCP server config to pass the `--archived`, `--starred`, and/or `--daily` flags to the `gistpad-mcp` CLI.
+
+## 💬 Custom prompts
+
+GistPad allows you to create and manage customized/re-usable prompts that are stored as markdown files in a gist. You can manage prompts using the `add_prompt` and `delete_prompt` tool, by simply asking your MCP client to create/delete a prompt, with the specified contents/arguments you want.
+
+Behind the scenes, prompts are stored as markdown files in a gist called `💬 Prompts` (which is automatically created by the `add_prompt` tool). The prompt files include their prompt as the body, and optionally, a description and arguments using front-matter. And if the prompt makes use of arguments, the body of the prompt should include `{{argument}}` placeholders, which will be replaced when the MCP client retrieves it.
 
 ## 💻 CLI Reference
 
