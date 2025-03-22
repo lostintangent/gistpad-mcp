@@ -153,7 +153,7 @@ export default {
                 if (Array.isArray(promptArgs) && promptArgs.length > 0) {
                     content += "arguments:\n";
                     for (const arg of promptArgs) {
-                        content += `. ${arg.name}: ${arg.description}\n`;
+                        content += `  ${arg.name}: ${arg.description}\n`;
                     }
                 }
                 content += "---\n\n";
