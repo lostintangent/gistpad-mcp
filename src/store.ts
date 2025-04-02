@@ -105,6 +105,17 @@ export abstract class GistStore {
     unsubscribe(gistId: string): void {
         this.subscribedGists.delete(gistId);
     }
+
+    async ensureContentLoaded(gist: Gist): Promise<Gist> {
+        if (isContentLoaded(gist)) return gist;
+
+        const { data: loadedGist } = await this.axiosInstance.get<Gist>(
+            `/${gist.id}`
+        );
+
+        this.update(loadedGist);
+        return loadedGist;
+    }
 }
 
 export class YourGistStore extends GistStore {
@@ -116,7 +127,7 @@ export class YourGistStore extends GistStore {
         if (this.dailyNotesGistId) {
             const gist = gists.find((gist) => gist.id === this.dailyNotesGistId);
             if (gist) {
-                return gist;
+                return this.ensureContentLoaded(gist);
             }
         }
 
@@ -128,14 +139,7 @@ export class YourGistStore extends GistStore {
         if (this.promptsGistId) {
             const gist = gists.find((gist) => gist.id === this.promptsGistId);
             if (gist) {
-                if (isContentLoaded(gist)) return gist;
-
-                const { data: loadedGist } = await this.axiosInstance.get<Gist>(
-                    `/${this.promptsGistId}`
-                );
-
-                this.update(loadedGist);
-                return loadedGist;
+                return this.ensureContentLoaded(gist);
             }
         }
 
