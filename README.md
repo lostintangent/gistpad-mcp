@@ -12,9 +12,11 @@ An MCP server for managing and sharing your personal knowledge, daily notes, and
 
 > ℹ️ The GistPad MCP server is built using Node.js and so before you perform the following steps, you need to ensure that you've got Node.js already installed.
 
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](<https://insiders.vscode.dev/redirect/mcp/install?name=gistpad&inputs=%5B%7B%22id%22:%22gistpad-token%22,%22type%22:%22promptString%22,%22description%22:%22GitHub%20Personal%20Access%20Token%20(GistPad)%22,%22password%22:true%7D%5D&config=%7B%22command%22:%22npx%22,%22args%22:%5B%22-y%22,%22gistpad-mcp%22%5D,%22env%22:%7B%22GITHUB_TOKEN%22:%22$%7Binput:gistpad-token%7D%22%7D%7D>) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](<https://insiders.vscode.dev/redirect/mcp/install?name=gistpad&inputs=%5B%7B%22id%22:%22gistpad-token%22,%22type%22:%22promptString%22,%22description%22:%22GitHub%20Personal%20Access%20Token%20(GistPad)%22,%22password%22:true%7D%5D&config=%7B%22command%22:%22npx%22,%22args%22:%5B%22-y%22,%22gistpad-mcp%22%5D,%22env%22:%7B%22GITHUB_TOKEN%22:%22$%7Binput:gistpad-token%7D%22%7D%7D&quality=insiders>)
+
 1. Generate a personal access token that includes _only_ the `gist` scope: https://github.com/settings/tokens/new
 
-1. Add the equivalent of the following to your client's MCP config file (or via an "Add MCP server" GUI/TUI):
+1. If you're using VS Code, then simply click the above badges to install the right config. Otherwise, add the equivalent of the following to your client's MCP config file (or via an "Add MCP server" GUI/TUI):
 
    ```json
    {
