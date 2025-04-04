@@ -1,3 +1,7 @@
+## 📆 v0.4.1 (04/04/2025)
+
+- Added one-click install support for VS Code
+
 ## 📆 v0.4.0 (03/21/2025)
 
 - Introduced support for managing MCP prompts, which are managed and served from a special gist named `💬 Prompts`.

@@ -47,7 +47,7 @@ class GistpadServer {
     this.server = new Server(
       {
         name: "gistpad",
-        version: "0.4.0",
+        version: "0.4.1",
       },
       {
         capabilities: {
