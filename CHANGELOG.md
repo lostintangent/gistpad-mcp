@@ -1,3 +1,7 @@
+## 📆 v0.4.2 (05/30/2025)
+
+- Added support for notifying clients when the list of prompts has changed
+
 ## 📆 v0.4.1 (04/04/2025)
 
 - Added one-click install support for VS Code

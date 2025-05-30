@@ -6,7 +6,7 @@ import {
     mcpGist,
 } from "../utils.js";
 
-const RESOURCE_PREFIX = "gist:///";
+const RESOURCE_PREFIX = "gist://";
 
 export const resourceHandlers: ResourceHandlers = {
     listResourceTemplates: () => ({

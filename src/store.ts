@@ -36,13 +36,13 @@ export abstract class GistStore {
 
     private notifyResourceChanged(gistId: string): void {
         if (this.triggerNotifications && this.subscribedGists.has(gistId)) {
-            this.server.sendResourceUpdated({ uri: `gist:///${gistId}` });
+            this.server.sendResourceUpdated({ uri: `gist://${gistId}` });
         }
     }
 
     private notifyPromptListChanged(): void {
         if (this.triggerNotifications) {
-            this.server.sendResourceListChanged();
+            this.server.sendPromptListChanged();
         }
     }
 
