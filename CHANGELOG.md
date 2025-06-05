@@ -1,3 +1,7 @@
+## 📆 v0.4.3 (06/05/2025)
+
+- Added support for templates when creating/opening a new daily note
+
 ## 📆 v0.4.2 (05/30/2025)
 
 - Added support for notifying clients when the list of prompts has changed

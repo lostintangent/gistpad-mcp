@@ -26,16 +26,28 @@ async function createDailyNotesGist(
     });
 
     context.gistStore.setDailyNotes(response.data);
-
     return response.data;
 }
 
+const TEMPLATE_FILENAME = "template.md";
 async function createTodaysNote(
     context: RequestContext,
     dailyNotes: Gist,
     filename: string
 ): Promise<Gist> {
-    const content = `# ${filename.replace(".md", "")}\n`;
+    const dateString = new Date().toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    });
+
+    let content = `# ${dateString}\n\n`;
+
+    if (dailyNotes.files[TEMPLATE_FILENAME]) {
+        const templateContent = dailyNotes.files[TEMPLATE_FILENAME].content;
+        content = templateContent.replace(/\{\{date\}\}/g, dateString);
+    }
+
     const response = await context.axiosInstance.patch(`/${dailyNotes.id}`, {
         files: {
             [filename]: {
