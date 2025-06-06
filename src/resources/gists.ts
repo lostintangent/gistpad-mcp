@@ -6,7 +6,7 @@ import {
     mcpGist,
 } from "../utils.js";
 
-const RESOURCE_PREFIX = "gist:///";
+const RESOURCE_PREFIX = "gist://";
 
 export const resourceHandlers: ResourceHandlers = {
     listResourceTemplates: () => ({
@@ -53,11 +53,10 @@ export const resourceHandlers: ResourceHandlers = {
 
     readResource: async (uri, context) => {
         const url = new URL(uri);
-        const path = url.pathname.replace(/^\//, "");
+        const path = url.host + (url.pathname ? '/' + url.pathname : '');
 
         if (path.endsWith("/comments")) {
-            const gistId = path.replace("/comments", "");
-            const response = await context.axiosInstance.get(`/${gistId}/comments`);
+            const response = await context.axiosInstance.get(`/${url.host}/comments`);
             return {
                 contents: [
                     {
