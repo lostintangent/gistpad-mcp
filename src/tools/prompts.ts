@@ -187,6 +187,8 @@ export default {
                 context.gistStore.update(updatedGist);
             }
 
+            await context.server.sendPromptListChanged();
+
             return `Successfully added prompt "${name}" to prompts collection`;
         },
     },

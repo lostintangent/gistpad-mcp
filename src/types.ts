@@ -1,3 +1,4 @@
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StarredGistStore, YourGistStore } from "./store.js";
 
 // GitHub Gist API types
@@ -39,6 +40,7 @@ export interface Gist {
 // MCP / GistPad server types
 
 export interface RequestContext {
+    server: Server;
     gistStore: YourGistStore;
     starredGistStore: StarredGistStore;
     axiosInstance: any;
