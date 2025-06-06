@@ -1,0 +1,26 @@
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "password": true,
+      "id": "github_token",
+      "description": "Github token"
+    }
+  ],
+  "servers": {
+    "gistpad": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["build/index.js"],
+      "env": {
+        "GITHUB_TOKEN": "${input:github_token}"
+      },
+      "dev": {
+        "watch": "build/**/*.js",
+        "debug": {
+          "type": "node"
+        }
+      }
+    }
+  }
+}
