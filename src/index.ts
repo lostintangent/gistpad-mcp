@@ -106,6 +106,7 @@ To read gists, notes, and gist comments, prefer using the available resources vs
 
   private createRequestContext(): RequestContext {
     return {
+      server: this.server,
       gistStore: this.gistStore,
       starredGistStore: this.starredGistStore,
       axiosInstance: this.axiosInstance,
