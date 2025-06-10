@@ -10,62 +10,63 @@ An MCP server for managing and sharing your personal knowledge, daily notes, and
 
 ## 🏃 Getting started
 
-> ℹ️ The GistPad MCP server is built using Node.js and so before you perform the following steps, you need to ensure that you've got Node.js already installed.
+1. Using VS Code?
 
-[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](<https://insiders.vscode.dev/redirect/mcp/install?name=gistpad&inputs=%5B%7B%22id%22:%22gistpad-token%22,%22type%22:%22promptString%22,%22description%22:%22GitHub%20Personal%20Access%20Token%20(GistPad)%22,%22password%22:true%7D%5D&config=%7B%22command%22:%22npx%22,%22args%22:%5B%22-y%22,%22gistpad-mcp%22%5D,%22env%22:%7B%22GITHUB_TOKEN%22:%22$%7Binput:gistpad-token%7D%22%7D%7D>) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](<https://insiders.vscode.dev/redirect/mcp/install?name=gistpad&inputs=%5B%7B%22id%22:%22gistpad-token%22,%22type%22:%22promptString%22,%22description%22:%22GitHub%20Personal%20Access%20Token%20(GistPad)%22,%22password%22:true%7D%5D&config=%7B%22command%22:%22npx%22,%22args%22:%5B%22-y%22,%22gistpad-mcp%22%5D,%22env%22:%7B%22GITHUB_TOKEN%22:%22$%7Binput:gistpad-token%7D%22%7D%7D&quality=insiders>)
+   1. Simply install the [GistPad extension](https://aka.ms/gistpad) and sign-in with your GitHub account. After that, you can begin using GistPad from Copilot chat (in `Agent` mode) without doing any extra setup or token management 💪
 
-1. Generate a personal access token that includes _only_ the `gist` scope: https://github.com/settings/tokens/new
+      > _Note: This requires VS Code 1.101.0+, so if you're on an older version, it's time to upgrade!_
 
-1. If you're using VS Code, then simply click the above badges to install the right config. Otherwise, add the equivalent of the following to your client's MCP config file (or via an "Add MCP server" GUI/TUI):
+1. Other MCP clients...
 
-   ```json
-   {
-     "mcpServers": {
-       "gistpad": {
-         "command": "npx",
-         "args": ["-y", "gistpad-mcp"],
-         "env": {
-           "GITHUB_TOKEN": "<YOUR_PAT>"
-         }
-       }
-     }
-   }
-   ```
+   1. Generate a personal access token that includes _only_ the `gist` scope: https://github.com/settings/tokens/new
+   1. Add the equivalent of the following to your client's MCP config file (or via an "Add MCP server" GUI/TUI):
 
-1. Restart your MCP client _(optionally, depending on the tool)_
+      ```json
+      {
+        "mcpServers": {
+          "gistpad": {
+            "command": "npx",
+            "args": ["-y", "gistpad-mcp"],
+            "env": {
+              "GITHUB_TOKEN": "<YOUR_PAT>"
+            }
+          }
+        }
+      }
+      ```
 
-1. :partying_face: Start having fun with gists + MCP! For example, try things like...
+Once your client it setup, you can start having fun with gists + MCP! 🥳 For example, try things like...
 
-   1. **Exploring content**
+1. **Exploring content**
 
-      - `How many gists have I edited this month?`
-      - `What's the summary of my <foo> gist?`
+   - `How many gists have I edited this month?`
+   - `What's the summary of my <foo> gist?`
 
-   1. **Creating content**
+1. **Creating content**
 
-      - `Create a new gist about <foo>`
-      - `Update my <foo> gist to call out <bar>`
+   - `Create a new gist about <foo>`
+   - `Update my <foo> gist to call out <bar>`
 
-   1. **Daily todos**
+1. **Daily todos**
 
-      - `What are my unfinished todos for today?`
-      - `Add a new todo for <foo>`
+   - `What are my unfinished todos for today?`
+   - `Add a new todo for <foo>`
 
-   1. **Collaboration**
+1. **Collaboration**
 
-      - `Add a comment to the <foo> gist saying <bar>`
-      - `Give me a share URL for the <foo> gist`
-      - `View my starred gists`
+   - `Add a comment to the <foo> gist saying <bar>`
+   - `Give me a share URL for the <foo> gist`
+   - `View my starred gists`
 
-   1. **Gist organization**
+1. **Gist organization**
 
-      - `Archive my gist about <foo>`
-      - `Add a new <foo> file to the <bar> gist and migrate the <baz> content into it`
+   - `Archive my gist about <foo>`
+   - `Add a new <foo> file to the <bar> gist and migrate the <baz> content into it`
 
-   1. **Reusable prompts**
+1. **Reusable prompts**
 
-      - `Create a new prompt that searches the web ofor a specified manga series and then provides a summary about it`
-      - `Delete my prompt about <foo>`
+   - `Create a new prompt that searches the web ofor a specified manga series and then provides a summary about it`
+   - `Delete my prompt about <foo>`
 
 ## 🛠️ Included tools
 
