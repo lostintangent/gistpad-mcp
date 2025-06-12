@@ -1,3 +1,7 @@
+## 📆 v0.4.4 (06/12/2025)
+
+- Updated README with instructions for setting up GistPad with VS Code 1.101.0
+
 ## 📆 v0.4.3 (06/05/2025)
 
 - Added support for templates when creating/opening a new daily note
