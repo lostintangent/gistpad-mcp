@@ -40,14 +40,14 @@ export abstract class GistStore {
         }
     }
 
-    private notifyPromptListChanged(): void {
+    private notifyPromptListChanged() {
         if (this.triggerNotifications) {
             this.server.sendPromptListChanged();
         }
     }
 
-    async getAll(): Promise<Gist[]> {
-        if (this.cache === null) {
+    async getAll(forceRefresh: boolean = false): Promise<Gist[]> {
+        if (this.cache === null || forceRefresh) {
             const gists = await this.fetchGists();
             this.cache = this.markdownOnly ? filterGists(gists) : gists;
         }
@@ -66,7 +66,7 @@ export abstract class GistStore {
         }
     }
 
-    remove(gistId: string): void {
+    remove(gistId: string) {
         if (this.cache) {
             this.cache = this.cache.filter((g) => g.id !== gistId);
             this.notifyResourceListChanged();
@@ -94,15 +94,16 @@ export abstract class GistStore {
         }
     }
 
-    invalidate(): void {
-        this.cache = null;
+    async refresh() {
+        await this.getAll(true);
+        this.notifyResourceListChanged();
     }
 
-    subscribe(gistId: string): void {
+    subscribe(gistId: string) {
         this.subscribedGists.add(gistId);
     }
 
-    unsubscribe(gistId: string): void {
+    unsubscribe(gistId: string) {
         this.subscribedGists.delete(gistId);
     }
 

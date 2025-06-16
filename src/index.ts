@@ -47,7 +47,7 @@ class GistpadServer {
     this.server = new Server(
       {
         name: "gistpad",
-        version: "0.4.5",
+        version: "0.4.6",
       },
       {
         capabilities: {
@@ -102,6 +102,16 @@ To read gists, notes, and gist comments, prefer using the available resources vs
       await this.server.close();
       process.exit(0);
     });
+
+    // Schedule an hourly background refresh
+    setInterval(async () => {
+      console.error("Refreshing gist cache...");
+
+      await Promise.all([
+        this.gistStore.refresh(),
+        this.starredGistStore.refresh(),
+      ]);
+    }, 1000 * 60 * 60);
   }
 
   private createRequestContext(): RequestContext {

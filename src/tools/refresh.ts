@@ -5,7 +5,7 @@ export default {
         {
             name: "refresh_gists",
             description:
-                "Reload the gist and starred gist stores, bypassing the cache",
+                "Refresh the server's cache of gists, to ensure it picks up any changes made by external clients.",
             inputSchema: {
                 type: "object",
                 properties: {},
@@ -16,15 +16,11 @@ export default {
 
     handlers: {
         refresh_gists: async (_, context) => {
-            context.gistStore.invalidate();
-            context.starredGistStore.invalidate();
-
             await Promise.all([
-                context.gistStore.getAll(),
-                context.starredGistStore.getAll(),
+                context.gistStore.refresh(),
+                context.starredGistStore.refresh(),
             ]);
 
-            await context.server.sendResourceListChanged();
             return "Gists refreshed!";
         },
     },

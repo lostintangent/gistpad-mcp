@@ -1,3 +1,7 @@
+## 📆 v0.4.6 (06/16/2025)
+
+- The server's gist cache is now automatically refreshed every hour
+
 ## 📆 v0.4.5 (06/16/2025)
 
 - Added the `refresh_gists` tool

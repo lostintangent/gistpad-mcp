@@ -150,4 +150,4 @@ The `gistpad-mcp` CLI accepts the following optional flags:
 
 ## 🧰 Troubleshooting
 
-- <u>Not seeing a gist in your list?</u> Rhe GistPad MCP server caches your gist list during the lifetime of its server process (for performance reasons), and so if you add/edit/delete a gist externally, you may need to tell GistPad MCP to refresh itself. You can do this by triggering the `refresh_gists` tool (e.g. running `#refresh_gists` in VS Code Copilot chat).
+- <u>Not seeing a gist in your list?</u> The GistPad MCP server caches your gist list and updates it 1) anytime you make a change through the MCP server, or 2) every hour. However, if you add/edit/delete a gist using an external client, you may need to tell GistPad MCP to refresh itself (assuming it hasn't performed its hourly refresh yet). You can do this by triggering the `refresh_gists` tool (e.g. running `#refresh_gists` in VS Code Copilot chat).
