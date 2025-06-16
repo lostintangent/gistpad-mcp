@@ -40,20 +40,38 @@ export const resourceHandlers: ResourceHandlers = {
                         (context.includeArchived || !isArchivedGist(gist)) &&
                         (context.includeDaily || !isDailyNoteGist(gist))
                 )
-                .map((gist) => ({
-                    uri: `${RESOURCE_PREFIX}${gist.id}`,
-                    name:
-                        gist.description ||
-                        Object.keys(gist.files)[0].replace(".md", "") ||
-                        "Untitled",
-                    mimeType: "application/json",
-                })),
+                .sort(
+                    (a, b) =>
+                        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+                )
+                .map((gist) => {
+                    let name = gist.description?.trim();
+                    if (!name) {
+                        const firstFile = Object.keys(gist.files)[0];
+                        if (firstFile !== "README.md") {
+                            // Strip the extension of markdown files, since
+                            // we'll treat those as pseudo descriptions.
+                            name = firstFile.replace(/\.md$/i, "");
+                        } else {
+                            // Explicity mark this as "Untitled", since the file
+                            // name isn't unique enough to be used as a name, and 
+                            // we want to draw attention to it.
+                            name = "Untitled";
+                        }
+                    }
+
+                    return {
+                        uri: `${RESOURCE_PREFIX}${gist.id}`,
+                        name,
+                        mimeType: "application/json",
+                    };
+                }),
         };
     },
 
     readResource: async (uri, context) => {
         const url = new URL(uri);
-        const path = url.host + (url.pathname ? '/' + url.pathname : '');
+        const path = url.host + (url.pathname ? "/" + url.pathname : "");
 
         if (path.endsWith("/comments")) {
             const response = await context.axiosInstance.get(`/${url.host}/comments`);

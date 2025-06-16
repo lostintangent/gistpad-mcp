@@ -1,6 +1,7 @@
 ## 📆 v0.4.5 (06/16/2025)
 
 - Added the `refresh_gists` tool
+- The list of gist resources are now sorted by modified date (descending)
 
 ## 📆 v0.4.4 (06/12/2025)
 
