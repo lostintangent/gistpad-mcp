@@ -25,12 +25,12 @@
     "inspector": "npx @modelcontextprotocol/inspector build/index.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "axios": "^1.8.2",
+    "@modelcontextprotocol/sdk": "^1.12.3",
+    "axios": "^1.10.0",
     "gray-matter": "^4.0.3"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
-    "typescript": "^5.3.3"
+    "typescript": "^5.8.3"
   }
 }
