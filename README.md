@@ -12,9 +12,11 @@ An MCP server for managing and sharing your personal knowledge, daily notes, and
 
 1. Using VS Code?
 
-   1. Simply install the [GistPad extension](https://aka.ms/gistpad) and sign-in with your GitHub account. After that, you can begin using GistPad from Copilot chat (in `Agent` mode) without doing any extra setup or token management 💪
+   1. Install the [GistPad extension](https://aka.ms/gistpad) and then reload VS Code
 
       > _Note: This requires VS Code 1.101.0+, so if you're on an older version, it's time to upgrade!_
+
+   1. Open the `GistPad` tab and sign-in with your GitHub account. After that, you can begin using GistPad from Copilot chat (in `Agent` mode) without doing any extra setup or token management 💪
 
 1. Other MCP clients...
 
@@ -78,6 +80,7 @@ Once your client it setup, you can start having fun with gists + MCP! 🥳 For e
 - `delete_gist` - Delete a gist by ID.
 - `update_gist_description` - Update a gist's description by ID.
 - `duplicate_gist` - Create a copy of an existing gist with all its files.
+- `refresh_gists` - Reload your gist lists, ignoring any cached data.
 
 ### File management
 
@@ -144,3 +147,7 @@ The `gistpad-mcp` CLI accepts the following optional flags:
 - `--starred` - Include starred gists in the list of MCP resources _(Note: The `list_starred_gists` tool is always available)_
 - `--daily` - Include daily notes in the list of MCP resources _(Note: The `list_daily_notes` tool is always available)_
 - `--markdown` - Filter the list of gists that are returned, to only those that are composed of Markdown files.
+
+## 🧰 Troubleshooting
+
+- <u>Not seeing a gist in your list?</u> Rhe GistPad MCP server caches your gist list during the lifetime of its server process (for performance reasons), and so if you add/edit/delete a gist externally, you may need to tell GistPad MCP to refresh itself. You can do this by triggering the `refresh_gists` tool.

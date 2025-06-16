@@ -5,6 +5,7 @@ import daily from "./daily.js";
 import fileTools from "./files.js";
 import gistTools from "./gist.js";
 import promptTools from "./prompts.js";
+import refreshTools from "./refresh.js";
 import starTools from "./star.js";
 
 const tools: ToolModule[] = [
@@ -14,6 +15,7 @@ const tools: ToolModule[] = [
     fileTools,
     gistTools,
     promptTools,
+    refreshTools,
     starTools,
 ];
 

@@ -1,3 +1,7 @@
+## 📆 v0.4.5 (06/16/2025)
+
+- Added the `refresh_gists` tool
+
 ## 📆 v0.4.4 (06/12/2025)
 
 - Updated README with instructions for setting up GistPad with VS Code 1.101.0
