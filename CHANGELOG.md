@@ -2,6 +2,7 @@
 
 - Added the `refresh_gists` tool
 - The list of gist resources are now sorted by modified date (descending)
+- Empty gist files can now be created (if desired)
 
 ## 📆 v0.4.4 (06/12/2025)
 

@@ -37,3 +37,10 @@ export function isPromptGist(gist: Gist): boolean {
 export function isContentLoaded(gist: Gist): boolean {
     return Object.values(gist.files).every((file) => file.content !== undefined);
 }
+
+// Gist's aren't allowed to be empty, so we're using an
+// "invisible plus" as content when the content is empty.
+const EMPTY_FILE_CONTENT = "\u{2064}";
+export function gistContent(content: string): string {
+    return content || EMPTY_FILE_CONTENT;
+}

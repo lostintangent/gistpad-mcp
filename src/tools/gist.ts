@@ -1,6 +1,7 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { Gist, ToolModule } from "../types.js";
 import {
+    gistContent,
     isArchivedGist,
     isDailyNoteGist,
     isPromptGist,
@@ -138,7 +139,7 @@ export default {
             const {
                 description = "",
                 filename = "README.md",
-                content,
+                content = "",
                 public: isPublic = false,
             } = args;
 
@@ -154,7 +155,7 @@ export default {
                 public: isPublic,
                 files: {
                     [filename as string]: {
-                        content,
+                        content: gistContent(content as string),
                     },
                 },
             });

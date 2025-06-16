@@ -1,5 +1,6 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { Gist, RequestContext, ToolModule } from "../types.js";
+import { gistContent } from "../utils.js";
 
 type FileAssertions = {
     exists?: string;
@@ -154,7 +155,9 @@ export default {
 
             await assertGistFile(context, id, { exists: filename });
 
-            await patchGistFile(context, id, filename, { content });
+            await patchGistFile(context, id, filename, {
+                content: gistContent(content),
+            });
 
             return "File updated successfully";
         },
@@ -168,7 +171,9 @@ export default {
 
             await assertGistFile(context, id, { notExists: filename });
 
-            await patchGistFile(context, id, filename, { content });
+            await patchGistFile(context, id, filename, {
+                content: gistContent(content),
+            });
 
             return "File added successfully";
         },
