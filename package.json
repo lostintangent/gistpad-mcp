@@ -1,6 +1,6 @@
 {
   "name": "gistpad-mcp",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "An MCP server for managing your personal knowledge, daily notes, and reusable prompts via GitHub Gists.",
   "type": "module",
   "bin": {

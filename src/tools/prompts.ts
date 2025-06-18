@@ -17,8 +17,8 @@ interface AddPromptArgs {
 export default {
     definitions: [
         {
-            name: "delete_prompt",
-            description: "Delete a prompt from your prompts collection",
+            name: "delete_gist_prompt",
+            description: "Delete a prompt from your gist-based prompts collection",
             inputSchema: {
                 type: "object",
                 properties: {
@@ -32,26 +32,27 @@ export default {
             },
         },
         {
-            name: "add_prompt",
-            description: "Add a new prompt to your prompts collection",
+            name: "add_gist_prompt",
+            description: "Add a new prompt to your gist-based prompts collection",
             inputSchema: {
                 type: "object",
                 properties: {
                     name: {
                         type: "string",
-                        description: "Name of the prompt (will be used as the filename)",
+                        description: "Name of the prompt, which will be used as the filename, and therefore, shouldn't include invalid characters. It will be saved with a .md extension, and therefore, this field can be provided without the .md extension.",
                     },
                     prompt: {
                         type: "string",
-                        description: "The prompt content",
+                        description:
+                            "The prompt content, which must be a natural language request that will be sent to the LLM in order to generate the requested response. It can include {{argument}} placeholders for arguments (referencing the argument name), that will be replaced dynamically when the prompt is used.",
                     },
                     description: {
                         type: "string",
-                        description: "Optional description of the prompt",
+                        description: "Optional description of the prompt, that will be displayed to the user when later selecting the prompt in the UI.",
                     },
                     arguments: {
                         type: "array",
-                        description: "Optional list of argument definitions",
+                        description: "Optional list of arguments that the prompt accepts (using {{placeholder}} variables in its text).",
                         items: {
                             type: "object",
                             properties: {
@@ -74,7 +75,7 @@ export default {
     ],
 
     handlers: {
-        delete_prompt: async (args: unknown, context) => {
+        delete_gist_prompt: async (args: unknown, context) => {
             const { name } = args as { name: string };
 
             if (!name || typeof name !== "string") {
@@ -118,7 +119,7 @@ export default {
             return `Successfully deleted prompt "${name}"`;
         },
 
-        add_prompt: async (args: unknown, context) => {
+        add_gist_prompt: async (args: unknown, context) => {
             const {
                 name,
                 prompt,

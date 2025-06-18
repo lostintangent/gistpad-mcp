@@ -118,8 +118,8 @@ Once your client it setup, you can start having fun with gists + MCP! 🥳 For e
 
 ### Prompts
 
-- `add_prompt` - Add a new prompt to your prompts collection.
-- `delete_prompt` - Delete a prompt from your collection.
+- `add_gist_prompt` - Add a new prompt to your prompts collection.
+- `delete_gist_prompt` - Delete a prompt from your collection.
 
 ## 📁 Included resources
 

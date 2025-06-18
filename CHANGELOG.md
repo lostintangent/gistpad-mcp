@@ -1,3 +1,7 @@
+## 📆 v0.4.7 (06/18/2025)
+
+- Renamed the prompt tools to include `gist` in the name: `add_prompt` -> `add_gist_prompt`, `delete_prompt` -> `delete_gist_prompt`.
+
 ## 📆 v0.4.6 (06/16/2025)
 
 - The server's gist cache is now automatically refreshed every hour
