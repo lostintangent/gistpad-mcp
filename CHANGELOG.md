@@ -1,3 +1,7 @@
+## 📆 v0.4.8 (07/07/2025)
+
+- Added a `list_gist_prompts` tool
+
 ## 📆 v0.4.7 (06/18/2025)
 
 - Renamed the prompt tools to include `gist` in the name: `add_prompt` -> `add_gist_prompt`, `delete_prompt` -> `delete_gist_prompt`.

@@ -4,11 +4,11 @@
       "type": "promptString",
       "password": true,
       "id": "github_token",
-      "description": "Github token"
+      "description": "Github PAT w/gist scope"
     }
   ],
   "servers": {
-    "gistpad": {
+    "GistPad (Dev)": {
       "type": "stdio",
       "command": "node",
       "args": ["build/index.js"],

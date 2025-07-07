@@ -17,6 +17,15 @@ interface AddPromptArgs {
 export default {
     definitions: [
         {
+            name: "list_gist_prompts",
+            description: "List the prompts in your gist-based prompts collection",
+            inputSchema: {
+                type: "object",
+                properties: {},
+                required: [],
+            },
+        },
+        {
             name: "delete_gist_prompt",
             description: "Delete a prompt from your gist-based prompts collection",
             inputSchema: {
@@ -75,6 +84,22 @@ export default {
     ],
 
     handlers: {
+        list_gist_prompts: async (_, context) => {
+            const promptsGist = await context.gistStore.getPrompts();
+            if (!promptsGist) {
+                return {
+                    prompts: [],
+                }
+            }
+
+            const prompts = Object.keys(promptsGist.files)
+                .map(filename => filename.replace(/\.md$/, ""));
+
+            return {
+                prompts,
+            };
+        },
+
         delete_gist_prompt: async (args: unknown, context) => {
             const { name } = args as { name: string };
 
@@ -187,8 +212,6 @@ export default {
 
                 context.gistStore.update(updatedGist);
             }
-
-            await context.server.sendPromptListChanged();
 
             return `Successfully added prompt "${name}" to prompts collection`;
         },

@@ -80,10 +80,17 @@ export abstract class GistStore {
                 const oldGist = this.cache[index];
                 this.cache[index] = gist;
 
+                // If the gist didn't actually change, we don't need to notify.
+                if (oldGist.updated_at === gist.updated_at) {
+                    return;
+                }
+
                 if (isPromptGist(gist)) {
                     this.notifyPromptListChanged();
                 } else {
-                    // If the description changed, the list of resources has changed
+                    // The resource list only includes the gist ID and
+                    // description, so we only need to notify clients to
+                    // update the list when a gist's description changes.
                     if (oldGist.description !== gist.description) {
                         this.notifyResourceListChanged();
                     }

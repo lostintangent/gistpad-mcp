@@ -47,7 +47,7 @@ class GistpadServer {
     this.server = new Server(
       {
         name: "gistpad",
-        version: "0.4.7",
+        version: "0.4.8",
       },
       {
         capabilities: {
@@ -71,7 +71,7 @@ class GistpadServer {
             listChanged: true,
           },
         },
-        instructions: `GistPad allows you to manage your personal knowledge/daily notes/todos, and create re-usable AI prompts, using GitHub Gists.
+        instructions: `GistPad allows you to manage your personal knowledge/daily notes/todos, and create re-usable prompts, using GitHub Gists.
 To read gists, notes, and gist comments, prefer using the available resources vs. tools. And then use the available tools to create, update, delete, archive, star, etc. your gists.`,
       }
     );

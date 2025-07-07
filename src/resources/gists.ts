@@ -6,7 +6,7 @@ import {
     mcpGist,
 } from "../utils.js";
 
-const RESOURCE_PREFIX = "gist://";
+const RESOURCE_PREFIX = "gist:///";
 
 export const resourceHandlers: ResourceHandlers = {
     listResourceTemplates: () => ({
@@ -48,15 +48,17 @@ export const resourceHandlers: ResourceHandlers = {
                     let name = gist.description?.trim();
                     if (!name) {
                         const firstFile = Object.keys(gist.files)[0];
-                        if (firstFile !== "README.md") {
-                            // Strip the extension of markdown files, since
-                            // we'll treat those as pseudo descriptions.
-                            name = firstFile.replace(/\.md$/i, "");
-                        } else {
+                        if (!firstFile) {
+                            name = "Empty";
+                        } else if (firstFile === "README.md") {
                             // Explicity mark this as "Untitled", since the file
                             // name isn't unique enough to be used as a name, and 
                             // we want to draw attention to it.
                             name = "Untitled";
+                        } else {
+                            // Strip the extension off markdown files, since
+                            // we'll treat those as pseudo descriptions.
+                            name = firstFile.replace(/\.md$/i, "");
                         }
                     }
 
@@ -70,11 +72,9 @@ export const resourceHandlers: ResourceHandlers = {
     },
 
     readResource: async (uri, context) => {
-        const url = new URL(uri);
-        const path = url.host + (url.pathname ? "/" + url.pathname : "");
-
-        if (path.endsWith("/comments")) {
-            const response = await context.axiosInstance.get(`/${url.host}/comments`);
+        const { pathname } = new URL(uri);
+        if (pathname.endsWith("/comments")) {
+            const response = await context.axiosInstance.get(pathname);
             return {
                 contents: [
                     {
@@ -86,7 +86,7 @@ export const resourceHandlers: ResourceHandlers = {
             };
         }
 
-        const { data: gist } = await context.axiosInstance.get(`/${path}`);
+        const { data: gist } = await context.axiosInstance.get(pathname);
         context.gistStore.update(gist);
 
         const resource = {
@@ -96,7 +96,7 @@ export const resourceHandlers: ResourceHandlers = {
         };
 
         // Note: Nothing uses this at the moment, but it could be useful in the future.
-        if (path.endsWith("/raw")) {
+        if (pathname.endsWith("/raw")) {
             const mainFile: GistFile =
                 gist.files["README.md"] || Object.keys(gist.files)[0]!;
 
