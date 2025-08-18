@@ -1,5 +1,6 @@
 # 📓 GistPad MCP
 
+[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/lostintangent/gistpad-mcp)](https://archestra.ai/mcp-catalog/lostintangent__gistpad-mcp)
 An MCP server for managing and sharing your personal knowledge, daily notes, and reuseable prompts via GitHub Gists. It's a companion to the GistPad [VS Code extension](https://aka.ms/gistpad) and [GistPad.dev](https://gistpad.dev) (for web/mobile), which allows you to access and edit your gists from any MCP-enabled AI product (e.g. GitHub Copilot, Claude Desktop).
 
 - 🏃 [Getting started](#-getting-started)
