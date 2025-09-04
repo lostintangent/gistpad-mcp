@@ -1,7 +1,7 @@
 {
   "gh-news": {
     "tools": ["list_notifications", "dismiss_notification", "get_notification_details"],
-    "description": "Manage GH notification",
+    "description": "Manage GH notifications",
     "icon": "github-project"
   }
 }
