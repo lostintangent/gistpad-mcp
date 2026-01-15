@@ -1,36 +1,43 @@
 {
   "name": "gistpad-mcp",
-  "version": "0.4.8",
+  "version": "0.5.0",
   "description": "An MCP server for managing your personal knowledge, daily notes, and reusable prompts via GitHub Gists.",
-  "type": "module",
-  "bin": {
-    "gistpad-mcp": "./build/index.js"
+  "homepage": "https://github.com/lostintangent/gistpad-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/lostintangent/gistpad-mcp/issues"
   },
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/lostintangent/gistpad-mcp"
   },
-  "bugs": {
-    "url": "https://github.com/lostintangent/gistpad-mcp/issues"
+  "bin": {
+    "gistpad-mcp": "./build/index.js"
   },
-  "homepage": "https://github.com/lostintangent/gistpad-mcp#readme",
-  "license": "MIT",
   "files": [
     "build"
   ],
+  "type": "module",
   "scripts": {
-    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "build": "tsgo && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
     "prepare": "npm run build",
-    "watch": "tsc --watch",
-    "inspector": "npx @modelcontextprotocol/inspector build/index.js"
+    "watch": "tsgo --watch",
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js",
+    "test": "node --import tsx --test test/*.ts",
+    "format": "oxfmt",
+    "lint": "oxlint --fix"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.15.0",
-    "axios": "^1.10.0",
-    "gray-matter": "^4.0.3"
+    "@modelcontextprotocol/sdk": "^1.25.2",
+    "axios": "^1.13.2",
+    "gray-matter": "^4.0.3",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
-    "typescript": "^5.8.3"
+    "@typescript/native-preview": "^7.0.0-dev.20260114.1",
+    "oxfmt": "^0.24.0",
+    "oxlint": "^1.39.0",
+    "tsx": "^4.7.0"
   }
 }

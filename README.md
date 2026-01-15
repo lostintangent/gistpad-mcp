@@ -11,7 +11,6 @@ An MCP server for managing and sharing your personal knowledge, daily notes, and
 ## 🏃 Getting started
 
 1. Using VS Code?
-
    1. Install the [GistPad extension](https://aka.ms/gistpad) and then reload VS Code
 
       > _Note: This requires VS Code 1.101.0+, so if you're on an older version, it's time to upgrade!_
@@ -19,7 +18,6 @@ An MCP server for managing and sharing your personal knowledge, daily notes, and
    1. Open the `GistPad` tab and sign-in with your GitHub account. After that, you can begin using GistPad from Copilot chat (in `Agent` mode) without doing any extra setup or token management 💪
 
 1. Other MCP clients...
-
    1. Generate a personal access token that includes _only_ the `gist` scope: https://github.com/settings/tokens/new
    1. Add the equivalent of the following to your client's MCP config file (or via an "Add MCP server" GUI/TUI):
 
@@ -40,33 +38,27 @@ An MCP server for managing and sharing your personal knowledge, daily notes, and
 Once your client it setup, you can start having fun with gists + MCP! 🥳 For example, try things like...
 
 1. **Exploring content**
-
    - `How many gists have I edited this month?`
    - `What's the summary of my <foo> gist?`
 
 1. **Creating content**
-
    - `Create a new gist about <foo>`
    - `Update my <foo> gist to call out <bar>`
 
 1. **Daily todos**
-
    - `What are my unfinished todos for today?`
    - `Add a new todo for <foo>`
 
 1. **Collaboration**
-
    - `Add a comment to the <foo> gist saying <bar>`
    - `Give me a share URL for the <foo> gist`
    - `View my starred gists`
 
 1. **Gist organization**
-
    - `Archive my gist about <foo>`
    - `Add a new <foo> file to the <bar> gist and migrate the <baz> content into it`
 
 1. **Reusable prompts**
-
    - `Create a new prompt that searches the web ofor a specified manga series and then provides a summary about it`
    - `Delete my prompt about <foo>`
 

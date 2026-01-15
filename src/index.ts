@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
-  CallToolRequestSchema,
   ErrorCode,
   GetPromptRequestSchema,
   ListPromptsRequestSchema,
   ListResourcesRequestSchema,
   ListResourceTemplatesRequestSchema,
-  ListToolsRequestSchema,
   McpError,
   ReadResourceRequestSchema,
   SubscribeRequestSchema,
@@ -17,23 +15,40 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import axios from "axios";
 import matter from "gray-matter";
+import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { resourceHandlers } from "./resources/gists.js";
 import { StarredGistStore, YourGistStore } from "./store.js";
-import { toolDefinitions, toolHandlers } from "./tools/index.js";
+import { registerTools } from "./tools/index.js";
 import { RequestContext } from "./types.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const packageJson = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf-8"),
+);
+const VERSION = packageJson.version;
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 if (!GITHUB_TOKEN) {
   throw new Error("GITHUB_TOKEN environment variable is required");
 }
 
+const GIST_CACHE_REFRESH_INTERVAL_MS = 1000 * 60 * 60; // 1 hour
+
 class GistpadServer {
-  private server: Server;
+  private server: McpServer;
   private axiosInstance;
 
   private gistStore: YourGistStore;
   private starredGistStore: StarredGistStore;
+
+  private readonly config = {
+    markdownOnly: process.argv.includes("--markdown"),
+    includeStarred: process.argv.includes("--starred"),
+    includeArchived: process.argv.includes("--archived"),
+    includeDaily: process.argv.includes("--daily"),
+  };
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -44,10 +59,10 @@ class GistpadServer {
       },
     });
 
-    this.server = new Server(
+    this.server = new McpServer(
       {
         name: "gistpad",
-        version: "0.4.8",
+        version: VERSION,
       },
       {
         capabilities: {
@@ -73,30 +88,31 @@ class GistpadServer {
         },
         instructions: `GistPad allows you to manage your personal knowledge/daily notes/todos, and create re-usable prompts, using GitHub Gists.
 To read gists, notes, and gist comments, prefer using the available resources vs. tools. And then use the available tools to create, update, delete, archive, star, etc. your gists.`,
-      }
+      },
     );
-
-    const markdownOnly = process.argv.includes("--markdown");
-    const includeStarred = process.argv.includes("--starred");
 
     this.gistStore = new YourGistStore(
       this.axiosInstance,
       this.server,
       true,
-      markdownOnly
+      this.config.markdownOnly,
     );
 
+    // Only trigger notifications for starred gists if they're included in the resource list
     this.starredGistStore = new StarredGistStore(
       this.axiosInstance,
       this.server,
-      includeStarred,
-      markdownOnly
+      this.config.includeStarred,
+      this.config.markdownOnly,
     );
 
-    this.setupResourceHandlers();
+    // Create shared context once for all handlers
+    const context = this.createRequestContext();
+
+    this.setupResourceHandlers(context);
     this.setupSubscriptionHandlers();
-    this.setupToolHandlers();
     this.setupPromptHandlers();
+    registerTools(this.server, context);
 
     process.on("SIGINT", async () => {
       await this.server.close();
@@ -107,11 +123,8 @@ To read gists, notes, and gist comments, prefer using the available resources vs
     setInterval(async () => {
       console.error("Refreshing gist cache...");
 
-      await Promise.all([
-        this.gistStore.refresh(),
-        this.starredGistStore.refresh(),
-      ]);
-    }, 1000 * 60 * 60);
+      await Promise.all([this.gistStore.refresh(), this.starredGistStore.refresh()]);
+    }, GIST_CACHE_REFRESH_INTERVAL_MS);
   }
 
   private createRequestContext(): RequestContext {
@@ -120,87 +133,41 @@ To read gists, notes, and gist comments, prefer using the available resources vs
       gistStore: this.gistStore,
       starredGistStore: this.starredGistStore,
       axiosInstance: this.axiosInstance,
-      includeArchived: process.argv.includes("--archived"),
-      includeStarred: process.argv.includes("--starred"),
-      includeDaily: process.argv.includes("--daily"),
+      includeArchived: this.config.includeArchived,
+      includeStarred: this.config.includeStarred,
+      includeDaily: this.config.includeDaily,
     };
   }
 
-  private setupResourceHandlers() {
-    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
-      const context = this.createRequestContext();
+  private setupResourceHandlers(context: RequestContext) {
+    // Use the underlying Server for low-level request handlers
+    this.server.server.setRequestHandler(ListResourcesRequestSchema, async () => {
       return resourceHandlers.listResources(context);
     });
 
-    this.server.setRequestHandler(
-      ReadResourceRequestSchema,
-      async ({ params: { uri } }) => {
-        const context = this.createRequestContext();
-        return resourceHandlers.readResource(uri, context);
-      }
-    );
+    this.server.server.setRequestHandler(ReadResourceRequestSchema, async ({ params: { uri } }) => {
+      return resourceHandlers.readResource(uri, context);
+    });
 
-    this.server.setRequestHandler(ListResourceTemplatesRequestSchema, () =>
-      resourceHandlers.listResourceTemplates()
+    this.server.server.setRequestHandler(ListResourceTemplatesRequestSchema, () =>
+      resourceHandlers.listResourceTemplates(),
     );
   }
 
   private setupSubscriptionHandlers() {
-    this.server.setRequestHandler(
-      SubscribeRequestSchema,
-      async ({ params: { uri } }) => {
-        this.gistStore.subscribe(uri);
-        return { success: true };
-      }
-    );
+    this.server.server.setRequestHandler(SubscribeRequestSchema, async ({ params: { uri } }) => {
+      this.gistStore.subscribe(uri);
+      return { success: true };
+    });
 
-    this.server.setRequestHandler(
-      UnsubscribeRequestSchema,
-      async ({ params: { uri } }) => {
-        this.gistStore.unsubscribe(uri);
-        return { success: true };
-      }
-    );
-  }
-
-  private setupToolHandlers() {
-    this.server.setRequestHandler(ListToolsRequestSchema, () => ({
-      tools: toolDefinitions,
-    }));
-
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-      try {
-        const handler = toolHandlers[request.params.name];
-        if (!handler) {
-          throw new McpError(
-            ErrorCode.MethodNotFound,
-            `Unknown tool: ${request.params.name}`
-          );
-        }
-
-        const args = request.params.arguments || {};
-        const context = this.createRequestContext();
-
-        const result = await handler(args, context);
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(result, null, 2),
-            },
-          ],
-        };
-      } catch (error: any) {
-        throw new McpError(
-          ErrorCode.InternalError,
-          `An error occurred while executing the requested tool: ${error.message}`
-        );
-      }
+    this.server.server.setRequestHandler(UnsubscribeRequestSchema, async ({ params: { uri } }) => {
+      this.gistStore.unsubscribe(uri);
+      return { success: true };
     });
   }
 
   private setupPromptHandlers() {
-    this.server.setRequestHandler(ListPromptsRequestSchema, async () => {
+    this.server.server.setRequestHandler(ListPromptsRequestSchema, async () => {
       const promptsGist = await this.gistStore.getPrompts();
       if (!promptsGist) {
         return {
@@ -213,13 +180,13 @@ To read gists, notes, and gist comments, prefer using the available resources vs
         .map(([filename, file]) => {
           const name = path.basename(filename, ".md");
           const { data, content } = matter(file.content);
-          let args =
-            data.arguments &&
-            Object.entries(data.arguments).map(([name, description]) => ({
+          let args = data.arguments
+            ? Object.entries(data.arguments).map(([name, description]) => ({
               name,
-              description,
+              description: description as string,
               required: true,
-            }));
+            }))
+            : undefined;
 
           // If no arguments defined in frontmatter, check content for placeholders
           if (!args) {
@@ -245,7 +212,7 @@ To read gists, notes, and gist comments, prefer using the available resources vs
       return { prompts };
     });
 
-    this.server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+    this.server.server.setRequestHandler(GetPromptRequestSchema, async (request) => {
       const promptsGist = await this.gistStore.getPrompts();
       if (!promptsGist) {
         throw new McpError(ErrorCode.InvalidRequest, "No prompts gist found");
@@ -254,10 +221,7 @@ To read gists, notes, and gist comments, prefer using the available resources vs
       const filename = `${request.params.name}.md`;
       const file = promptsGist.files[filename];
       if (!file) {
-        throw new McpError(
-          ErrorCode.InvalidRequest,
-          `Prompt "${request.params.name}" not found`
-        );
+        throw new McpError(ErrorCode.InvalidRequest, `Prompt "${request.params.name}" not found`);
       }
 
       const { content } = matter(file.content);
@@ -266,7 +230,7 @@ To read gists, notes, and gist comments, prefer using the available resources vs
       Object.keys(request.params.arguments || {}).forEach((key) => {
         textContent = textContent.replace(
           new RegExp(`{{${key}}}`, "g"),
-          request.params.arguments![key]
+          request.params.arguments![key],
         );
       });
 
@@ -293,9 +257,6 @@ To read gists, notes, and gist comments, prefer using the available resources vs
 
 const server = new GistpadServer();
 server.run().catch((error) => {
-  console.error(
-    "An error occurred while running the GistPad MCP server:",
-    error
-  );
+  console.error("An error occurred while running the GistPad MCP server:", error);
   process.exit(1);
 });

@@ -1,3 +1,7 @@
+## 📆 v0.5.0 (01/14/2026)
+
+- Added the `edit_gist_file` tool for making targeted find-and-replace edits to gist files
+
 ## 📆 v0.4.8 (07/07/2025)
 
 - Added a `list_gist_prompts` tool
