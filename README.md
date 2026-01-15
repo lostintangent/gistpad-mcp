@@ -11,6 +11,7 @@ An MCP server for managing and sharing your personal knowledge, daily notes, and
 ## 🏃 Getting started
 
 1. Using VS Code?
+
    1. Install the [GistPad extension](https://aka.ms/gistpad) and then reload VS Code
 
       > _Note: This requires VS Code 1.101.0+, so if you're on an older version, it's time to upgrade!_
@@ -18,6 +19,7 @@ An MCP server for managing and sharing your personal knowledge, daily notes, and
    1. Open the `GistPad` tab and sign-in with your GitHub account. After that, you can begin using GistPad from Copilot chat (in `Agent` mode) without doing any extra setup or token management 💪
 
 1. Other MCP clients...
+
    1. Generate a personal access token that includes _only_ the `gist` scope: https://github.com/settings/tokens/new
    1. Add the equivalent of the following to your client's MCP config file (or via an "Add MCP server" GUI/TUI):
 
@@ -38,23 +40,28 @@ An MCP server for managing and sharing your personal knowledge, daily notes, and
 Once your client it setup, you can start having fun with gists + MCP! 🥳 For example, try things like...
 
 1. **Exploring content**
+
    - `How many gists have I edited this month?`
    - `What's the summary of my <foo> gist?`
 
 1. **Creating content**
+
    - `Create a new gist about <foo>`
    - `Update my <foo> gist to call out <bar>`
 
 1. **Daily todos**
+
    - `What are my unfinished todos for today?`
    - `Add a new todo for <foo>`
 
 1. **Collaboration**
+
    - `Add a comment to the <foo> gist saying <bar>`
    - `Give me a share URL for the <foo> gist`
    - `View my starred gists`
 
 1. **Gist organization**
+
    - `Archive my gist about <foo>`
    - `Add a new <foo> file to the <bar> gist and migrate the <baz> content into it`
 
@@ -80,26 +87,7 @@ Once your client it setup, you can start having fun with gists + MCP! 🥳 For e
 - `add_gist_file` - Add a new file to an existing gist.
 - `delete_gist_file` - Delete a file from a gist.
 - `rename_gist_file` - Rename an existing file within a gist.
-
-### Daily notes
-
-- `get_todays_note` - Get or create today's daily note.
-- `update_todays_note` - Update the content of today's daily note.
-- `list_daily_notes` - List all of your daily notes.
-- `get_daily_note` - Get the contents of a specific daily note by date.
-- `delete_daily_note` - Delete a specific daily note by date.
-
-### Starring
-
-- `list_starred_gists` - List all your starred gists.
-- `star_gist` - Star a specific gist by ID.
-- `unstar_gist` - Unstar a starered gist by ID.
-
-### Archiving
-
-- `list_archived_gists` - List all of your archived gists.
-- `archive_gist` - Archive one of your gists.
-- `unarchive_gist` - Unarchive an archived gist.
+- `edit_gist_file` - Make targeted find-and-replace edits to a gist file.
 
 ### Comments
 
@@ -108,7 +96,31 @@ Once your client it setup, you can start having fun with gists + MCP! 🥳 For e
 - `edit_gist_comment` - Update the content of an existing comment.
 - `delete_gist_comment` - Delete a comment from a gist.
 
-### Prompts
+## 🛠️ Optional tools
+
+The following tool sets are disabled by default to keep the tool surface minimal. Enable them by passing the corresponding CLI flag.
+
+#### Daily notes (`--daily`)
+
+- `get_todays_note` - Get or create today's daily note.
+- `update_todays_note` - Update the content of today's daily note.
+- `list_daily_notes` - List all of your daily notes.
+- `get_daily_note` - Get the contents of a specific daily note by date.
+- `delete_daily_note` - Delete a specific daily note by date.
+
+#### Starring (`--starred`)
+
+- `list_starred_gists` - List all your starred gists.
+- `star_gist` - Star a specific gist by ID.
+- `unstar_gist` - Unstar a starred gist by ID.
+
+#### Archiving (`--archived`)
+
+- `list_archived_gists` - List all of your archived gists.
+- `archive_gist` - Archive one of your gists.
+- `unarchive_gist` - Unarchive an archived gist.
+
+#### Prompts (`--prompts`)
 
 - `list_gist_prompts` - List the prompts in your prompts collection.
 - `add_gist_prompt` - Add a new prompt to your prompts collection.
@@ -136,10 +148,11 @@ Behind the scenes, prompts are stored as markdown files in a gist called `💬 P
 
 The `gistpad-mcp` CLI accepts the following optional flags:
 
-- `--archived` - Include archived gists in the list of MCP resources _(Note: The `list_archived_gists` tool is always available)_
-- `--starred` - Include starred gists in the list of MCP resources _(Note: The `list_starred_gists` tool is always available)_
-- `--daily` - Include daily notes in the list of MCP resources _(Note: The `list_daily_notes` tool is always available)_
-- `--markdown` - Filter the list of gists that are returned, to only those that are composed of Markdown files.
+- `--archived` - Enable archive tools and include archived gists in resources
+- `--starred` - Enable starring tools and include starred gists in resources
+- `--daily` - Enable daily note tools and include daily notes in resources
+- `--prompts` - Enable prompt tools and MCP prompt handlers
+- `--markdown` - Filter gists to only those composed of Markdown files
 
 ## 🧰 Troubleshooting
 

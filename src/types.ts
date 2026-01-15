@@ -79,6 +79,15 @@ export interface ResourceHandlers {
   readResource: (uri: string, context: RequestContext) => Promise<ReadResourceResult>;
 }
 
+/** Configuration options parsed from CLI flags */
+export interface ServerConfig {
+  markdownOnly: boolean;
+  includeStarred: boolean;
+  includeArchived: boolean;
+  includeDaily: boolean;
+  includePrompts: boolean;
+}
+
 // Shared Zod schemas
 
 export const gistIdSchema = z.object({

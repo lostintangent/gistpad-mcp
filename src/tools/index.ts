@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
-import { RequestContext, ToolEntry } from "../types.js";
+import { RequestContext, ServerConfig, ToolEntry } from "../types.js";
 import archiveTools from "./archive.js";
 import commentTools from "./comments.js";
 import dailyTools from "./daily.js";
@@ -9,6 +9,14 @@ import gistTools from "./gist.js";
 import promptTools from "./prompts.js";
 import refreshTools from "./refresh.js";
 import starTools from "./star.js";
+
+/** Core tools that are always registered */
+const coreTools: ToolEntry[] = [
+  ...commentTools,
+  ...fileTools,
+  ...gistTools,
+  ...refreshTools,
+];
 
 /**
  * Converts a snake_case tool name to a Title Case string.
@@ -50,22 +58,25 @@ function getDefaultAnnotations(name: string, existing?: ToolAnnotations): ToolAn
   };
 }
 
-const allTools: ToolEntry[] = [
-  ...archiveTools,
-  ...commentTools,
-  ...dailyTools,
-  ...fileTools,
-  ...gistTools,
-  ...promptTools,
-  ...refreshTools,
-  ...starTools,
-];
-
 /**
- * Registers all tools with the McpServer, applying default annotations.
+ * Registers tools with the McpServer, applying default annotations.
+ * Core tools are always registered; optional tools (archive, daily, prompts)
+ * are registered based on the provided options.
  */
-export function registerTools(server: McpServer, context: RequestContext): void {
-  for (const tool of allTools) {
+export function registerTools(
+  server: McpServer,
+  context: RequestContext,
+  config: ServerConfig,
+): void {
+  const tools: ToolEntry[] = [
+    ...coreTools,
+    ...(config.includeArchived ? archiveTools : []),
+    ...(config.includeDaily ? dailyTools : []),
+    ...(config.includePrompts ? promptTools : []),
+    ...(config.includeStarred ? starTools : []),
+  ];
+
+  for (const tool of tools) {
     server.registerTool(
       tool.name,
       {

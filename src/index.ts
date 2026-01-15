@@ -21,7 +21,7 @@ import { fileURLToPath } from "node:url";
 import { resourceHandlers } from "./resources/gists.js";
 import { StarredGistStore, YourGistStore } from "./store.js";
 import { registerTools } from "./tools/index.js";
-import { RequestContext } from "./types.js";
+import { RequestContext, ServerConfig } from "./types.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageJson = JSON.parse(
@@ -43,11 +43,12 @@ class GistpadServer {
   private gistStore: YourGistStore;
   private starredGistStore: StarredGistStore;
 
-  private readonly config = {
+  private readonly config: ServerConfig = {
     markdownOnly: process.argv.includes("--markdown"),
     includeStarred: process.argv.includes("--starred"),
     includeArchived: process.argv.includes("--archived"),
     includeDaily: process.argv.includes("--daily"),
+    includePrompts: process.argv.includes("--prompts"),
   };
 
   constructor() {
@@ -111,8 +112,12 @@ To read gists, notes, and gist comments, prefer using the available resources vs
 
     this.setupResourceHandlers(context);
     this.setupSubscriptionHandlers();
-    this.setupPromptHandlers();
-    registerTools(this.server, context);
+
+    if (this.config.includePrompts) {
+      this.setupPromptHandlers();
+    }
+
+    registerTools(this.server, context, this.config);
 
     process.on("SIGINT", async () => {
       await this.server.close();

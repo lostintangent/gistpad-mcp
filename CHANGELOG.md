@@ -1,6 +1,7 @@
-## 📆 v0.5.0 (01/14/2026)
+## 📆 v0.5.0 (01/15/2026)
 
-- Added the `edit_gist_file` tool for making targeted find-and-replace edits to gist files
+- Added the `edit_gist_file` tool for making precise edits to large gist files
+- The `--starred`, `--archived`, `--daily`, and `--prompts` flags now control both resource visibility AND tool registration.
 
 ## 📆 v0.4.8 (07/07/2025)
 

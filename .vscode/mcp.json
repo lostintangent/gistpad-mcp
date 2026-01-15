@@ -11,7 +11,13 @@
     "GistPad (Dev)": {
       "type": "stdio",
       "command": "node",
-      "args": ["build/index.js"],
+      "args": [
+        "build/index.js",
+        "--archived",
+        "--starred",
+        "--daily",
+        "--prompts"
+      ],
       "env": {
         "GITHUB_TOKEN": "${input:github_token}"
       },
