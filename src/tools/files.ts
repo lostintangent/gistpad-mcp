@@ -34,14 +34,14 @@ const editFileSchema = z.object({
     .string()
     .describe(
       "The exact text to find and replace. Must match precisely, " +
-      "including whitespace, indentation, and newlines. Include " +
-      "surrounding context to ensure uniqueness (e.g., full lines).",
+        "including whitespace, indentation, and newlines. Include " +
+        "surrounding context to ensure uniqueness (e.g., full lines).",
     ),
   new_string: z
     .string()
     .describe(
       "The replacement text. Use empty string to delete. " +
-      "For insertions, include the original text plus new content.",
+        "For insertions, include the original text plus new content.",
     ),
   replace_all: z
     .boolean()
@@ -49,7 +49,7 @@ const editFileSchema = z.object({
     .default(false)
     .describe(
       "Replace all occurrences (true) or require unique match (false, default). " +
-      "When false, edit fails if old_string appears more than once.",
+        "When false, edit fails if old_string appears more than once.",
     ),
 });
 
@@ -221,7 +221,7 @@ export default [
         throw new McpError(
           ErrorCode.InvalidParams,
           `The specified old_string was not found in the file "${filename}". ` +
-          `Make sure the string matches exactly, including whitespace and line breaks.`,
+            `Make sure the string matches exactly, including whitespace and line breaks.`,
         );
       }
 
@@ -229,8 +229,8 @@ export default [
         throw new McpError(
           ErrorCode.InvalidParams,
           `Found ${occurrences} occurrences of old_string in "${filename}". ` +
-          `Either set replace_all to true to replace all occurrences, ` +
-          `or provide a more specific old_string with surrounding context to match uniquely.`,
+            `Either set replace_all to true to replace all occurrences, ` +
+            `or provide a more specific old_string with surrounding context to match uniquely.`,
         );
       }
 

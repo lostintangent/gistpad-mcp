@@ -187,10 +187,10 @@ To read gists, notes, and gist comments, prefer using the available resources vs
           const { data, content } = matter(file.content);
           let args = data.arguments
             ? Object.entries(data.arguments).map(([name, description]) => ({
-              name,
-              description: description as string,
-              required: true,
-            }))
+                name,
+                description: description as string,
+                required: true,
+              }))
             : undefined;
 
           // If no arguments defined in frontmatter, check content for placeholders

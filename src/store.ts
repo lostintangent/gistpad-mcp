@@ -25,7 +25,7 @@ export abstract class GistStore {
     private server: McpServer,
     private triggerNotifications: boolean = true,
     private markdownOnly: boolean = false,
-  ) { }
+  ) {}
 
   protected abstract fetchGists(): Promise<Gist[]>;
 

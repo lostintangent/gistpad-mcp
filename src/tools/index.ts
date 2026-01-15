@@ -11,12 +11,7 @@ import refreshTools from "./refresh.js";
 import starTools from "./star.js";
 
 /** Core tools that are always registered */
-const coreTools: ToolEntry[] = [
-  ...commentTools,
-  ...fileTools,
-  ...gistTools,
-  ...refreshTools,
-];
+const coreTools: ToolEntry[] = [...commentTools, ...fileTools, ...gistTools, ...refreshTools];
 
 /**
  * Converts a snake_case tool name to a Title Case string.
