@@ -1,13 +1,14 @@
 import { z } from "zod";
-import { gistIdSchema, ToolEntry } from "../types.js";
+import type { Gist, ToolEntry } from "#types";
 import {
   findGistById,
   gistContent,
+  gistIdSchema,
   isArchivedGist,
   isDailyNoteGist,
   isPromptGist,
   mcpGist,
-} from "../utils.js";
+} from "#utils";
 
 const createGistSchema = z.object({
   description: z.string().describe("Description of the Gist"),
@@ -53,7 +54,7 @@ export default [
     description: "Get the full contents of a GitHub Gist by ID (including file contents).",
     inputSchema: gistIdSchema,
     handler: async ({ id }, context) => {
-      const { data: gist } = await context.axiosInstance.get(`/${id}`);
+      const gist = await context.fetchClient.get<Gist>(`/${id}`);
 
       context.gistStore.update(gist);
 
@@ -72,7 +73,7 @@ export default [
         public: isPublic,
       } = args as z.infer<typeof createGistSchema>;
 
-      const { data: gist } = await context.axiosInstance.post("", {
+      const gist = await context.fetchClient.post<Gist>("", {
         description,
         public: isPublic,
         files: {
@@ -92,7 +93,7 @@ export default [
     description: "Delete a GitHub Gist by ID",
     inputSchema: gistIdSchema,
     handler: async ({ id }, context) => {
-      await context.axiosInstance.delete(`/${id}`);
+      await context.fetchClient.delete(`/${id}`);
 
       context.gistStore.remove(id as string);
 
@@ -104,7 +105,7 @@ export default [
     description: "Update a GitHub Gist's description",
     inputSchema: updateDescriptionSchema,
     handler: async ({ id, description }, context) => {
-      const { data: gist } = await context.axiosInstance.patch(`/${id}`, {
+      const gist = await context.fetchClient.patch<Gist>(`/${id}`, {
         description,
       });
 
@@ -120,8 +121,8 @@ export default [
     handler: async ({ id }, context) => {
       const sourceGist = await findGistById(context, id as string);
 
-      const newDescription = `${sourceGist.description || ""} (Copy)`.trim();
-      const { data: gist } = await context.axiosInstance.post("", {
+      const newDescription = `${sourceGist.description ?? ""} (Copy)`.trim();
+      const gist = await context.fetchClient.post<Gist>("", {
         description: newDescription,
         public: sourceGist.public,
         files: Object.fromEntries(

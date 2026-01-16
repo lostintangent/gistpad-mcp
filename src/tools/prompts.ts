@@ -1,7 +1,7 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { ToolEntry } from "../types.js";
-import { PROMPTS_DESCRIPTION } from "../utils.js";
+import type { Gist, ToolEntry } from "#types";
+import { PROMPTS_DESCRIPTION } from "#utils";
 
 const deletePromptSchema = z.object({
   name: z
@@ -85,7 +85,7 @@ export default [
         throw new McpError(ErrorCode.InvalidParams, `Prompt "${filename}" not found`);
       }
 
-      const { data: updatedGist } = await context.axiosInstance.patch(`/${promptsGist.id}`, {
+      const updatedGist = await context.fetchClient.patch<Gist>(`/${promptsGist.id}`, {
         files: {
           [filename]: null,
         },
@@ -136,7 +136,7 @@ export default [
       // Get or create the prompts gist
       let promptsGist = await context.gistStore.getPrompts();
       if (!promptsGist) {
-        const { data: gist } = await context.axiosInstance.post("", {
+        const gist = await context.fetchClient.post<Gist>("", {
           description: PROMPTS_DESCRIPTION,
           public: false,
           files: filesPatch,
@@ -144,7 +144,7 @@ export default [
 
         context.gistStore.setPrompts(gist);
       } else {
-        const { data: updatedGist } = await context.axiosInstance.patch(`/${promptsGist.id}`, {
+        const updatedGist = await context.fetchClient.patch<Gist>(`/${promptsGist.id}`, {
           files: filesPatch,
         });
 

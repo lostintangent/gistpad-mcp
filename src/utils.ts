@@ -1,5 +1,12 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { Gist, RequestContext } from "./types.js";
+import { z } from "zod";
+import type { Gist, RequestContext } from "#types";
+
+// Shared Zod schemas
+
+export const gistIdSchema = z.object({
+  id: z.string().describe("The ID of the gist"),
+});
 
 export function mcpGist(gist: Gist) {
   return {
@@ -62,7 +69,7 @@ export async function findGistById(
   const gists = await context.gistStore.getAll();
   const gist = gists.find((g: Gist) => g.id === id);
   if (!gist) {
-    throw new McpError(ErrorCode.InvalidParams, errorMessage || `Gist with ID "${id}" not found`);
+    throw new McpError(ErrorCode.InvalidParams, errorMessage ?? `Gist with ID "${id}" not found`);
   }
   return gist;
 }
@@ -76,10 +83,10 @@ export async function patchGistFile(
   filename: string,
   patch: { content?: string; filename?: string } | null,
 ): Promise<void> {
-  const response = await context.axiosInstance.patch(`/${gistId}`, {
+  const gist = await context.fetchClient.patch<Gist>(`/${gistId}`, {
     files: {
       [filename]: patch,
     },
   });
-  context.gistStore.update(response.data);
+  context.gistStore.update(gist);
 }

@@ -1,6 +1,7 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { GistComment, gistIdSchema, ToolEntry } from "../types.js";
+import type { GistComment, ToolEntry } from "#types";
+import { gistIdSchema } from "#utils";
 
 const ERROR_COMMENT_BODY_REQUIRED = "Comment body is required and cannot be empty";
 
@@ -26,8 +27,7 @@ export default [
     description: "List all comments on a gist",
     inputSchema: gistIdSchema,
     handler: async ({ id }, context) => {
-      const response = await context.axiosInstance.get(`/${id}/comments`);
-      const comments = response.data as GistComment[];
+      const comments = await context.fetchClient.get<GistComment[]>(`/${id}/comments`);
 
       return {
         count: comments.length,
@@ -50,13 +50,13 @@ export default [
         throw new McpError(ErrorCode.InvalidParams, ERROR_COMMENT_BODY_REQUIRED);
       }
 
-      const response = await context.axiosInstance.post(`/${id}/comments`, {
+      const comment = await context.fetchClient.post<GistComment>(`/${id}/comments`, {
         body,
       });
 
       return {
         gist_id: id,
-        comment_id: response.data.id,
+        comment_id: comment.id,
         message: "Comment added successfully",
       };
     },
@@ -66,7 +66,7 @@ export default [
     description: "Delete a comment from a gist",
     inputSchema: deleteCommentSchema,
     handler: async ({ gist_id, comment_id }, context) => {
-      await context.axiosInstance.delete(`/${gist_id}/comments/${comment_id}`);
+      await context.fetchClient.delete(`/${gist_id}/comments/${comment_id}`);
 
       return "Comment deleted successfully";
     },
@@ -80,7 +80,7 @@ export default [
         throw new McpError(ErrorCode.InvalidParams, ERROR_COMMENT_BODY_REQUIRED);
       }
 
-      await context.axiosInstance.patch(`/${gist_id}/comments/${comment_id}`, {
+      await context.fetchClient.patch(`/${gist_id}/comments/${comment_id}`, {
         body,
       });
 

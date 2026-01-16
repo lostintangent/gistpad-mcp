@@ -1,7 +1,8 @@
-import { suite, test, mock } from "node:test";
 import assert from "node:assert";
-import type { Gist, GistFile, RequestContext, ToolEntry } from "../src/types.js";
+import { mock, suite, test } from "node:test";
+import type { FetchClient } from "../src/server/fetch.js";
 import fileTools from "../src/tools/files.js";
+import type { Gist, GistFile, RequestContext, ToolEntry } from "../src/types.js";
 
 // Create a lookup object from the tools array for easy access in tests
 const handlers = Object.fromEntries(fileTools.map((tool: ToolEntry) => [tool.name, tool.handler]));
@@ -11,7 +12,7 @@ const handlers = Object.fromEntries(fileTools.map((tool: ToolEntry) => [tool.nam
 // ============================================================================
 
 interface MockContext extends RequestContext {
-  axiosInstance: { patch: ReturnType<typeof mock.fn> };
+  fetchClient: FetchClient & { patch: ReturnType<typeof mock.fn> };
   gistStore: RequestContext["gistStore"] & {
     update: ReturnType<typeof mock.fn>;
   };
@@ -53,17 +54,20 @@ function createMockContext(gists: Gist[]): MockContext {
       ensureContentLoaded: mock.fn(async (gist: Gist) => gist),
     } as unknown as MockContext["gistStore"],
     starredGistStore: {} as MockContext["starredGistStore"],
-    axiosInstance: {
+    fetchClient: {
+      get: mock.fn(),
+      post: mock.fn(),
       patch: mock.fn(
-        async (_url: string, data: { files: Record<string, { content: string }> }) => ({
-          data: {
+        async <T>(_url: string, data: { files: Record<string, { content: string }> }): Promise<T> =>
+          ({
             ...gists[0],
             files: { ...gists[0]?.files, ...data.files },
             updated_at: new Date().toISOString(),
-          },
-        }),
+          }) as T,
       ),
-    },
+      put: mock.fn(),
+      delete: mock.fn(),
+    } as unknown as MockContext["fetchClient"],
     includeArchived: false,
     includeStarred: false,
     includeDaily: false,
@@ -71,9 +75,9 @@ function createMockContext(gists: Gist[]): MockContext {
 }
 
 function getPatchedContent(context: MockContext, filename: string): string | undefined {
-  const calls = context.axiosInstance.patch.mock.calls;
+  const calls = context.fetchClient.patch.mock.calls;
   if (calls.length === 0) return undefined;
-  const patchData = calls[0].arguments[1] as
+  const patchData = calls[0]?.arguments[1] as
     | { files?: Record<string, { content?: string }> }
     | undefined;
   return patchData?.files?.[filename]?.content;
@@ -95,7 +99,7 @@ async function assertEditRejects(
   const context = createMockContext([gist]);
 
   await assert.rejects(
-    handlers.edit_gist_file(
+    handlers.edit_gist_file!(
       {
         id: "test-123",
         filename,
@@ -127,7 +131,7 @@ async function assertEdit(
   const gist = createMockGist("test-123", { [filename]: content });
   const context = createMockContext([gist]);
 
-  const result = (await handlers.edit_gist_file(
+  const result = (await handlers.edit_gist_file!(
     {
       id: "test-123",
       filename,
@@ -299,10 +303,10 @@ More content.
 // ============================================================================
 
 suite("edit_gist_file - Error Cases", () => {
-  test("should throw when gist not found", async () => {
+  test("should throw when gist not found", () => {
     const context = createMockContext([]);
-    await assert.rejects(
-      handlers.edit_gist_file(
+    return assert.rejects(
+      handlers.edit_gist_file!(
         {
           id: "nonexistent",
           filename: "test.md",
@@ -315,50 +319,45 @@ suite("edit_gist_file - Error Cases", () => {
     );
   });
 
-  test("should throw when file not found in gist", async () => {
-    await assertEditRejects(
+  test("should throw when file not found in gist", () =>
+    assertEditRejects(
       "# Hello",
       "nonexistent.md",
       "foo",
       "bar",
       /File "nonexistent.md" not found in gist/,
       { gistFilename: "readme.md" },
-    );
-  });
+    ));
 
-  test("should throw when old_string not found in file", async () => {
-    await assertEditRejects(
+  test("should throw when old_string not found in file", () =>
+    assertEditRejects(
       "# Hello World",
       "test.md",
       "Goodbye",
       "Hi",
       /old_string was not found/,
-    );
-  });
+    ));
 
-  test("should throw when multiple occurrences found without replace_all", async () => {
-    await assertEditRejects(
+  test("should throw when multiple occurrences found without replace_all", () =>
+    assertEditRejects(
       FIXTURES.withDuplicates,
       "todos.md",
       "TODO",
       "DONE",
       /Found 4 occurrences.*replace_all/,
-    );
-  });
+    ));
 
-  test("should throw when old_string equals new_string", async () => {
-    await assertEditRejects(
+  test("should throw when old_string equals new_string", () =>
+    assertEditRejects(
       "# Hello",
       "test.md",
       "Hello",
       "Hello",
       /old_string and new_string must be different/,
-    );
-  });
+    ));
 
-  test("should throw when old_string is empty", async () => {
-    await assertEditRejects("# Hello", "test.md", "", "something", /old_string was not found/);
-  });
+  test("should throw when old_string is empty", () =>
+    assertEditRejects("# Hello", "test.md", "", "something", /old_string was not found/));
 });
 
 // ============================================================================
@@ -366,44 +365,39 @@ suite("edit_gist_file - Error Cases", () => {
 // ============================================================================
 
 suite("edit_gist_file - Markdown Lists", () => {
-  test("should add item to end of list", async () => {
-    await assertEdit(FIXTURES.simpleList, "shopping.md", "- Oranges\n", "- Oranges\n- Grapes\n", {
+  test("should add item to end of list", () =>
+    assertEdit(FIXTURES.simpleList, "shopping.md", "- Oranges\n", "- Oranges\n- Grapes\n", {
       includes: ["- Grapes", "- Oranges"],
-    });
-  });
+    }));
 
-  test("should add item to beginning of list", async () => {
-    await assertEdit(FIXTURES.simpleList, "shopping.md", "- Apples", "- Strawberries\n- Apples", {
+  test("should add item to beginning of list", () =>
+    assertEdit(FIXTURES.simpleList, "shopping.md", "- Apples", "- Strawberries\n- Apples", {
       includes: ["- Strawberries", "- Apples"],
-    });
-  });
+    }));
 
-  test("should remove a list item", async () => {
-    await assertEdit(FIXTURES.simpleList, "shopping.md", "- Bananas\n", "", {
+  test("should remove a list item", () =>
+    assertEdit(FIXTURES.simpleList, "shopping.md", "- Bananas\n", "", {
       includes: ["Apples", "Oranges"],
       excludes: ["Bananas"],
-    });
-  });
+    }));
 
-  test("should edit item in nested list preserving indentation", async () => {
-    await assertEdit(
+  test("should edit item in nested list preserving indentation", () =>
+    assertEdit(
       FIXTURES.nestedList,
       "tasks.md",
       "  - Design mockups",
       "  - Design mockups ✅",
       { includes: ["  - Design mockups ✅"] },
-    );
-  });
+    ));
 
-  test("should toggle task list checkbox", async () => {
-    await assertEdit(
+  test("should toggle task list checkbox", () =>
+    assertEdit(
       FIXTURES.withTaskList,
       "tasks.md",
       "- [ ] Pending task",
       "- [x] Pending task",
       { includes: ["- [x] Pending task"] },
-    );
-  });
+    ));
 });
 
 // ============================================================================
@@ -411,29 +405,26 @@ suite("edit_gist_file - Markdown Lists", () => {
 // ============================================================================
 
 suite("edit_gist_file - Markdown Headings", () => {
-  test("should edit heading text", async () => {
-    await assertEdit(FIXTURES.multipleHeadings, "doc.md", "# Main Title", "# Updated Title", {
+  test("should edit heading text", () =>
+    assertEdit(FIXTURES.multipleHeadings, "doc.md", "# Main Title", "# Updated Title", {
       includes: ["# Updated Title"],
       excludes: ["# Main Title"],
-    });
-  });
+    }));
 
-  test("should change heading level", async () => {
-    await assertEdit(FIXTURES.multipleHeadings, "doc.md", "### Subsection", "## Subsection", {
+  test("should change heading level", () =>
+    assertEdit(FIXTURES.multipleHeadings, "doc.md", "### Subsection", "## Subsection", {
       includes: ["\n## Subsection"],
       excludes: ["### Subsection"],
-    });
-  });
+    }));
 
-  test("should insert new section with heading", async () => {
-    await assertEdit(
+  test("should insert new section with heading", () =>
+    assertEdit(
       FIXTURES.multipleHeadings,
       "doc.md",
       "## Section Two",
       "## New Section\n\nNew content.\n\n## Section Two",
       { includes: ["## New Section", "## Section Two"] },
-    );
-  });
+    ));
 });
 
 // ============================================================================
@@ -441,28 +432,26 @@ suite("edit_gist_file - Markdown Headings", () => {
 // ============================================================================
 
 suite("edit_gist_file - Markdown Paragraphs", () => {
-  test("should edit paragraph content", async () => {
-    await assertEdit(
+  test("should edit paragraph content", () =>
+    assertEdit(
       FIXTURES.multipleParagraphs,
       "article.md",
       "This is the first paragraph with some content.",
       "This is the UPDATED first paragraph.",
       { includes: ["UPDATED first paragraph"] },
-    );
-  });
+    ));
 
-  test("should add new paragraph between existing ones", async () => {
-    await assertEdit(
+  test("should add new paragraph between existing ones", () =>
+    assertEdit(
       FIXTURES.multipleParagraphs,
       "article.md",
       "This is the second paragraph with different content.",
       "This is the second paragraph with different content.\n\nINSERTED PARAGRAPH HERE.",
       { includes: ["INSERTED PARAGRAPH HERE"] },
-    );
-  });
+    ));
 
-  test("should delete paragraph by replacing with empty string", async () => {
-    await assertEdit(
+  test("should delete paragraph by replacing with empty string", () =>
+    assertEdit(
       FIXTURES.multipleParagraphs,
       "article.md",
       "\n\nThis is the second paragraph with different content.",
@@ -471,8 +460,7 @@ suite("edit_gist_file - Markdown Paragraphs", () => {
         includes: ["first paragraph", "third paragraph"],
         excludes: ["second paragraph"],
       },
-    );
-  });
+    ));
 });
 
 // ============================================================================
@@ -480,24 +468,21 @@ suite("edit_gist_file - Markdown Paragraphs", () => {
 // ============================================================================
 
 suite("edit_gist_file - Markdown Code Blocks", () => {
-  test("should edit code inside fenced code block", async () => {
-    await assertEdit(FIXTURES.withCodeBlock, "api.md", "method: 'GET'", "method: 'POST'", {
+  test("should edit code inside fenced code block", () =>
+    assertEdit(FIXTURES.withCodeBlock, "api.md", "method: 'GET'", "method: 'POST'", {
       includes: ["method: 'POST'"],
       excludes: ["method: 'GET'"],
-    });
-  });
+    }));
 
-  test("should change code block language", async () => {
-    await assertEdit(FIXTURES.withCodeBlock, "api.md", "```typescript", "```javascript", {
+  test("should change code block language", () =>
+    assertEdit(FIXTURES.withCodeBlock, "api.md", "```typescript", "```javascript", {
       includes: ["```javascript"],
-    });
-  });
+    }));
 
-  test("should edit inline code", async () => {
-    await assertEdit(FIXTURES.withInlineCode, "config.md", "`DEBUG=true`", "`DEBUG=false`", {
+  test("should edit inline code", () =>
+    assertEdit(FIXTURES.withInlineCode, "config.md", "`DEBUG=true`", "`DEBUG=false`", {
       includes: ["`DEBUG=false`"],
-    });
-  });
+    }));
 });
 
 // ============================================================================
@@ -505,32 +490,29 @@ suite("edit_gist_file - Markdown Code Blocks", () => {
 // ============================================================================
 
 suite("edit_gist_file - Markdown Tables", () => {
-  test("should edit table cell content", async () => {
-    await assertEdit(
+  test("should edit table cell content", () =>
+    assertEdit(
       FIXTURES.withTable,
       "users.md",
       "| Alice | 30 | Admin |",
       "| Alice | 31 | SuperAdmin |",
       { includes: ["| Alice | 31 | SuperAdmin |"] },
-    );
-  });
+    ));
 
-  test("should add table row", async () => {
-    await assertEdit(
+  test("should add table row", () =>
+    assertEdit(
       FIXTURES.withTable,
       "users.md",
       "| Carol | 35 | User |",
       "| Carol | 35 | User |\n| Dave | 28 | User |",
       { includes: ["| Dave | 28 | User |"] },
-    );
-  });
+    ));
 
-  test("should delete table row", async () => {
-    await assertEdit(FIXTURES.withTable, "users.md", "| Bob | 25 | User |\n", "", {
+  test("should delete table row", () =>
+    assertEdit(FIXTURES.withTable, "users.md", "| Bob | 25 | User |\n", "", {
       includes: ["Alice", "Carol"],
       excludes: ["Bob"],
-    });
-  });
+    }));
 });
 
 // ============================================================================
@@ -538,35 +520,32 @@ suite("edit_gist_file - Markdown Tables", () => {
 // ============================================================================
 
 suite("edit_gist_file - Links and Images", () => {
-  test("should update link URL", async () => {
-    await assertEdit(
+  test("should update link URL", () =>
+    assertEdit(
       FIXTURES.withLinks,
       "links.md",
       "[Google](https://google.com)",
       "[Google](https://www.google.com)",
       { includes: ["https://www.google.com"] },
-    );
-  });
+    ));
 
-  test("should change link text", async () => {
-    await assertEdit(
+  test("should change link text", () =>
+    assertEdit(
       FIXTURES.withLinks,
       "links.md",
       "[GitHub](https://github.com)",
       "[GitHub Homepage](https://github.com)",
       { includes: ["[GitHub Homepage]"] },
-    );
-  });
+    ));
 
-  test("should update image URL", async () => {
-    await assertEdit(
+  test("should update image URL", () =>
+    assertEdit(
       FIXTURES.withLinks,
       "links.md",
       "![Logo](https://example.com/logo.png)",
       "![Logo](https://example.com/new-logo.png)",
       { includes: ["new-logo.png"] },
-    );
-  });
+    ));
 });
 
 // ============================================================================
@@ -574,15 +553,14 @@ suite("edit_gist_file - Links and Images", () => {
 // ============================================================================
 
 suite("edit_gist_file - Blockquotes", () => {
-  test("should edit blockquote content", async () => {
-    await assertEdit(
+  test("should edit blockquote content", () =>
+    assertEdit(
       FIXTURES.withBlockquote,
       "quote.md",
       "> To be or not to be,",
       "> To code or not to code,",
       { includes: ["> To code or not to code,"] },
-    );
-  });
+    ));
 });
 
 // ============================================================================
@@ -590,63 +568,55 @@ suite("edit_gist_file - Blockquotes", () => {
 // ============================================================================
 
 suite("edit_gist_file - Edge Cases", () => {
-  test("should handle single character content", async () => {
-    await assertEdit("#", "minimal.md", "#", "# New Heading", {
+  test("should handle single character content", () =>
+    assertEdit("#", "minimal.md", "#", "# New Heading", {
       equals: "# New Heading",
-    });
-  });
+    }));
 
-  test("should handle unicode content", async () => {
-    await assertEdit(FIXTURES.unicodeContent, "unicode.md", "Hello 世界!", "Bonjour 世界!", {
+  test("should handle unicode content", () =>
+    assertEdit(FIXTURES.unicodeContent, "unicode.md", "Hello 世界!", "Bonjour 世界!", {
       includes: ["Bonjour 世界!", "🌍"],
-    });
-  });
+    }));
 
-  test("should treat regex special characters as literals", async () => {
-    await assertEdit(FIXTURES.withSpecialChars, "config.md", "[a-z]+.*", "[A-Z]+\\d*", {
+  test("should treat regex special characters as literals", () =>
+    assertEdit(FIXTURES.withSpecialChars, "config.md", "[a-z]+.*", "[A-Z]+\\d*", {
       includes: ["[A-Z]+\\d*"],
       excludes: ["[a-z]+.*"],
-    });
-  });
+    }));
 
-  test("should handle dollar sign as literal", async () => {
-    await assertEdit(FIXTURES.withSpecialChars, "config.md", "$100", "$200", {
+  test("should handle dollar sign as literal", () =>
+    assertEdit(FIXTURES.withSpecialChars, "config.md", "$100", "$200", {
       includes: ["$200"],
-    });
-  });
+    }));
 
-  test("should preserve exact whitespace and indentation", async () => {
-    await assertEdit(
+  test("should preserve exact whitespace and indentation", () =>
+    assertEdit(
       "# Title\n\n    indented line\n\nregular line",
       "whitespace.md",
       "    indented line",
       "        double indent",
       { includes: ["        double indent"] },
-    );
-  });
+    ));
 
-  test("should handle multiline replacement", async () => {
-    await assertEdit(
+  test("should handle multiline replacement", () =>
+    assertEdit(
       FIXTURES.simpleList,
       "doc.md",
       "- Apples\n- Bananas",
       "- Apples\n- Blueberries\n- Bananas",
       { includes: ["- Apples", "- Blueberries", "- Bananas"] },
-    );
-  });
+    ));
 
-  test("should replace entire file content", async () => {
-    await assertEdit("Old content", "test.md", "Old content", "Completely new content", {
+  test("should replace entire file content", () =>
+    assertEdit("Old content", "test.md", "Old content", "Completely new content", {
       equals: "Completely new content",
-    });
-  });
+    }));
 
-  test("should handle horizontal rule", async () => {
-    await assertEdit(FIXTURES.withHorizontalRule, "doc.md", "---", "***", {
+  test("should handle horizontal rule", () =>
+    assertEdit(FIXTURES.withHorizontalRule, "doc.md", "---", "***", {
       includes: ["***"],
       excludes: ["---"],
-    });
-  });
+    }));
 });
 
 // ============================================================================
@@ -654,33 +624,30 @@ suite("edit_gist_file - Edge Cases", () => {
 // ============================================================================
 
 suite("edit_gist_file - replace_all", () => {
-  test("should replace all occurrences when replace_all is true", async () => {
-    await assertEdit(
+  test("should replace all occurrences when replace_all is true", () =>
+    assertEdit(
       FIXTURES.withDuplicates,
       "todos.md",
       "TODO",
       "DONE",
       { excludes: ["TODO"], resultIncludes: "4 occurrences" },
       { replace_all: true },
-    );
-  });
+    ));
 
-  test("should work with replace_all for single occurrence", async () => {
-    await assertEdit(
+  test("should work with replace_all for single occurrence", () =>
+    assertEdit(
       "Hello World",
       "test.md",
       "Hello",
       "Hi",
       { equals: "Hi World", resultIncludes: "1 occurrence" },
       { replace_all: true },
-    );
-  });
+    ));
 
-  test("should return singular 'occurrence' for single replacement", async () => {
-    await assertEdit("# Hello World", "test.md", "Hello", "Hi", {
+  test("should return singular 'occurrence' for single replacement", () =>
+    assertEdit("# Hello World", "test.md", "Hello", "Hi", {
       resultIncludes: "1 occurrence",
-    });
-  });
+    }));
 });
 
 // ============================================================================
@@ -692,7 +659,7 @@ suite("edit_gist_file - Store Integration", () => {
     const gist = createMockGist("test-123", { "test.md": "Hello" });
     const context = createMockContext([gist]);
 
-    await handlers.edit_gist_file(
+    await handlers.edit_gist_file!(
       {
         id: "test-123",
         filename: "test.md",
@@ -710,7 +677,7 @@ suite("edit_gist_file - Store Integration", () => {
     const context = createMockContext([gist]);
 
     await assert.rejects(
-      handlers.edit_gist_file(
+      handlers.edit_gist_file!(
         {
           id: "test-123",
           filename: "test.md",

@@ -1,5 +1,5 @@
-import { Gist, gistIdSchema, ToolEntry } from "../types.js";
-import { findGistById, mcpGist } from "../utils.js";
+import type { Gist, ToolEntry } from "#types";
+import { findGistById, gistIdSchema, mcpGist } from "#utils";
 
 export default [
   {
@@ -19,15 +19,14 @@ export default [
     description: "Star a gist",
     inputSchema: gistIdSchema,
     handler: async ({ id }, context) => {
-      await context.axiosInstance.put(`/${id}/star`);
+      await context.fetchClient.put(`/${id}/star`);
 
       // Try to find gist in cache first, otherwise fetch it
       let gist: Gist;
       try {
         gist = await findGistById(context, id as string);
       } catch {
-        const response = await context.axiosInstance.get(`/${id}`);
-        gist = response.data;
+        gist = await context.fetchClient.get<Gist>(`/${id}`);
       }
 
       context.starredGistStore.add(gist);
@@ -40,7 +39,7 @@ export default [
     description: "Unstar a gist",
     inputSchema: gistIdSchema,
     handler: async ({ id }, context) => {
-      await context.axiosInstance.delete(`/${id}/star`);
+      await context.fetchClient.delete(`/${id}/star`);
       context.starredGistStore.remove(id as string);
 
       return "Gist unstarred successfully";

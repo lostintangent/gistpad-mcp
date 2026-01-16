@@ -1,6 +1,6 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
-import { RequestContext, ServerConfig, ToolEntry } from "../types.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
+import type { RequestContext, ServerConfig, ToolEntry } from "#types";
 import archiveTools from "./archive.js";
 import commentTools from "./comments.js";
 import dailyTools from "./daily.js";
@@ -76,7 +76,7 @@ export function registerTools(
       tool.name,
       {
         description: tool.description,
-        inputSchema: tool.inputSchema,
+        ...(tool.inputSchema && { inputSchema: tool.inputSchema }),
         annotations: getDefaultAnnotations(tool.name, tool.annotations),
       },
       async (args: Record<string, unknown>) => {

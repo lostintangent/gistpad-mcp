@@ -1,11 +1,5 @@
-import { Gist, GistComment, GistFile, RequestContext, ResourceHandlers } from "../types.js";
-import {
-  GIST_URI_PREFIX,
-  isArchivedGist,
-  isDailyNoteGist,
-  isPromptGist,
-  mcpGist,
-} from "../utils.js";
+import type { Gist, GistComment, GistFile, RequestContext, ResourceHandlers } from "#types";
+import { GIST_URI_PREFIX, isArchivedGist, isDailyNoteGist, isPromptGist, mcpGist } from "#utils";
 
 /**
  * Determines if a gist should be included in the resource list based on context flags.
@@ -64,7 +58,7 @@ export const resourceHandlers: ResourceHandlers = {
       const starredGists = await context.starredGistStore.getAll();
       const markedStarredGists = starredGists.map((gist) => ({
         ...gist,
-        description: (gist.description || "") + " [Starred]",
+        description: (gist.description ?? "") + " [Starred]",
       }));
       gists = [...gists, ...markedStarredGists];
     }
@@ -87,17 +81,16 @@ export const resourceHandlers: ResourceHandlers = {
   readResource: async (uri, context) => {
     const { pathname } = new URL(uri);
     if (pathname.endsWith("/comments")) {
-      const response = await context.axiosInstance.get(pathname);
-      const comments = response.data as GistComment[];
+      const comments = await context.fetchClient.get<GistComment[]>(pathname);
 
       // Use the most recent comment's updated_at as lastModified
-      const lastModified =
-        comments.length > 0
-          ? comments.reduce(
-              (latest, comment) => (comment.updated_at > latest ? comment.updated_at : latest),
-              comments[0].updated_at,
-            )
-          : undefined;
+      const firstComment = comments[0];
+      const lastModified = firstComment
+        ? comments.reduce(
+            (latest, comment) => (comment.updated_at > latest ? comment.updated_at : latest),
+            firstComment.updated_at,
+          )
+        : undefined;
 
       return {
         contents: [
@@ -111,7 +104,7 @@ export const resourceHandlers: ResourceHandlers = {
       };
     }
 
-    const { data: gist } = await context.axiosInstance.get(pathname);
+    const gist = await context.fetchClient.get<Gist>(pathname);
     context.gistStore.update(gist);
 
     const resource = {
@@ -122,7 +115,7 @@ export const resourceHandlers: ResourceHandlers = {
 
     // Note: Nothing uses this at the moment, but it could be useful in the future.
     if (pathname.endsWith("/raw")) {
-      const mainFile: GistFile = gist.files["README.md"] || Object.values(gist.files)[0]!;
+      const mainFile: GistFile = gist.files["README.md"] ?? Object.values(gist.files).at(0)!;
 
       resource.mimeType = mainFile.type;
       resource.text = mainFile.content;

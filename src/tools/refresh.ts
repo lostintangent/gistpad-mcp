@@ -1,4 +1,4 @@
-import { ToolEntry } from "../types.js";
+import type { ToolEntry } from "#types";
 
 export default [
   {

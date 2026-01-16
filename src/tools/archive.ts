@@ -1,13 +1,14 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { gistIdSchema, ToolEntry } from "../types.js";
+import type { Gist, ToolEntry } from "#types";
 import {
   ARCHIVED_SUFFIX,
   ARCHIVED_SUFFIX_REGEX,
   findGistById,
+  gistIdSchema,
   isArchivedGist,
   isDailyNoteGist,
   mcpGist,
-} from "../utils.js";
+} from "#utils";
 
 export default [
   {
@@ -38,12 +39,12 @@ export default [
         throw new McpError(ErrorCode.InvalidParams, "Gist is already archived");
       }
 
-      const newDescription = `${gist.description || ""}${ARCHIVED_SUFFIX}`.trim();
-      const response = await context.axiosInstance.patch(`/${id}`, {
+      const newDescription = `${gist.description ?? ""}${ARCHIVED_SUFFIX}`.trim();
+      const updatedGist = await context.fetchClient.patch<Gist>(`/${id}`, {
         description: newDescription,
       });
 
-      context.gistStore.update(response.data);
+      context.gistStore.update(updatedGist);
 
       return "Gist archived successfully";
     },
@@ -60,11 +61,11 @@ export default [
       }
 
       const newDescription = gist.description.replace(ARCHIVED_SUFFIX_REGEX, "");
-      const response = await context.axiosInstance.patch(`/${id}`, {
+      const updatedGist = await context.fetchClient.patch<Gist>(`/${id}`, {
         description: newDescription,
       });
 
-      context.gistStore.update(response.data);
+      context.gistStore.update(updatedGist);
 
       return "Gist unarchived successfully";
     },

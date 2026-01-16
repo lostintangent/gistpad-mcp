@@ -1,12 +1,13 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import {
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type {
   ListResourcesResult,
   ListResourceTemplatesResult,
   ReadResourceResult,
   ToolAnnotations,
 } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod";
-import { StarredGistStore, YourGistStore } from "./store.js";
+import type { z } from "zod";
+import type { StarredGistStore, YourGistStore } from "./server/store.js";
+import type { FetchClient } from "./server/fetch.js";
 
 // GitHub Gist API types
 
@@ -50,7 +51,7 @@ export interface RequestContext {
   server: McpServer;
   gistStore: YourGistStore;
   starredGistStore: StarredGistStore;
-  axiosInstance: any;
+  fetchClient: FetchClient;
   includeArchived: boolean;
   includeStarred: boolean;
   includeDaily: boolean;
@@ -79,17 +80,20 @@ export interface ResourceHandlers {
   readResource: (uri: string, context: RequestContext) => Promise<ReadResourceResult>;
 }
 
-/** Configuration options parsed from CLI flags */
+/** Configuration options for the server */
 export interface ServerConfig {
+  /** GitHub personal access token for API authentication */
+  githubToken: string;
+  /** Server version from package.json */
+  version: string;
+  /** Only include markdown gists */
   markdownOnly: boolean;
+  /** Include starred gists in resource list */
   includeStarred: boolean;
+  /** Include archived gists in resource list */
   includeArchived: boolean;
+  /** Include daily notes functionality */
   includeDaily: boolean;
+  /** Include prompts functionality */
   includePrompts: boolean;
 }
-
-// Shared Zod schemas
-
-export const gistIdSchema = z.object({
-  id: z.string().describe("The ID of the gist"),
-});

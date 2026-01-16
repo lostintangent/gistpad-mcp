@@ -1,7 +1,7 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { Gist, RequestContext, ToolEntry } from "../types.js";
-import { EMPTY_FILE_CONTENT, gistContent, patchGistFile } from "../utils.js";
+import type { Gist, RequestContext, ToolEntry } from "#types";
+import { EMPTY_FILE_CONTENT, gistContent, patchGistFile } from "#utils";
 
 // Shared schemas
 const updateFileSchema = z.object({
@@ -211,7 +211,7 @@ export default [
 
       // Ensure file content is loaded (gists can be fetched without content)
       const loadedGist = await context.gistStore.ensureContentLoaded(gist);
-      const rawContent = loadedGist.files[filename].content;
+      const rawContent = loadedGist.files[filename]!.content;
       const content = normalizeContent(rawContent);
 
       // Count occurrences to validate uniqueness constraint
@@ -236,7 +236,7 @@ export default [
 
       // Perform the replacement
       const newContent = replaceAll
-        ? content.split(oldString).join(newString)
+        ? content.replaceAll(oldString, newString)
         : content.replace(oldString, newString);
 
       // Save changes

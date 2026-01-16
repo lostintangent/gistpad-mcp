@@ -1,7 +1,7 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { Gist, RequestContext, ToolEntry } from "../types.js";
-import { DAILY_NOTES_DESCRIPTION, patchGistFile } from "../utils.js";
+import type { Gist, RequestContext, ToolEntry } from "#types";
+import { DAILY_NOTES_DESCRIPTION, patchGistFile } from "#utils";
 
 const dateSchema = z.object({
   date: z
@@ -36,7 +36,7 @@ function getTodaysFilename(): string {
 
 async function createDailyNotesGist(context: RequestContext, filename: string): Promise<Gist> {
   const content = `# ${filename.replace(".md", "")}\n`;
-  const response = await context.axiosInstance.post("", {
+  const gist = await context.fetchClient.post<Gist>("", {
     description: DAILY_NOTES_DESCRIPTION,
     public: false,
     files: {
@@ -46,8 +46,8 @@ async function createDailyNotesGist(context: RequestContext, filename: string): 
     },
   });
 
-  context.gistStore.setDailyNotes(response.data);
-  return response.data;
+  context.gistStore.setDailyNotes(gist);
+  return gist;
 }
 
 const TEMPLATE_FILENAME = "template.md";
@@ -66,10 +66,10 @@ async function createTodaysNote(
 
   if (dailyNotes.files[TEMPLATE_FILENAME]) {
     const templateContent = dailyNotes.files[TEMPLATE_FILENAME].content;
-    content = templateContent.replace(/\{\{date\}\}/g, dateString);
+    content = templateContent.replaceAll("{{date}}", dateString);
   }
 
-  const response = await context.axiosInstance.patch(`/${dailyNotes.id}`, {
+  const gist = await context.fetchClient.patch<Gist>(`/${dailyNotes.id}`, {
     files: {
       [filename]: {
         content,
@@ -77,8 +77,8 @@ async function createTodaysNote(
     },
   });
 
-  context.gistStore.update(response.data);
-  return response.data;
+  context.gistStore.update(gist);
+  return gist;
 }
 
 export default [
@@ -100,13 +100,12 @@ export default [
         const contents = dailyNotes.files[filename].content;
         if (!contents) {
           // Fetch the daily gist by ID
-          const response = await context.axiosInstance.get(`/${dailyNotes.id}`);
-          dailyNotes = response.data as Gist;
+          dailyNotes = await context.fetchClient.get<Gist>(`/${dailyNotes.id}`);
           context.gistStore.update(dailyNotes);
         }
       }
 
-      return dailyNotes.files[filename].content;
+      return dailyNotes.files[filename]!.content;
     },
   },
   {
